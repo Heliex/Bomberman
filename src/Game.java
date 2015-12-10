@@ -17,7 +17,6 @@ public class Game extends BasicGame{
 	
 	// All static and no changing variables.
 	public final static int LARGEUR_SPRITE = 16, HAUTEUR_SPRITE = 32;
-	public final static int OFFSET_HORIZONTAL = 8, OFFSET_VERTICAL = 16;
 	public final static int TAILLE_CASE = 32;
 	public final static int NB_CASE_HAUTEUR = 16, NB_CASE_LARGEUR = 25;
 	
@@ -146,23 +145,25 @@ public class Game extends BasicGame{
 		switch(direction)
 		{
 			case 0 :
-				// Si on dépasse pas du plateau
+			// Si on dépasse pas du plateau	
 			if(p.getY() - delta*0.1f > 0)
 				canMove = true;
 			break;
-			
+			// Si on dépasse pas du plateau
 			case 1 :
 			if(p.getX() - delta*0.1f > 0)
 				canMove = true;
 			break;
 			
 			case 2 :
-			if(p.getY() + OFFSET_VERTICAL< NB_CASE_HAUTEUR * TAILLE_CASE)
+			// Si on dépasse pas du plateau
+			if(p.getY() + TAILLE_CASE< NB_CASE_HAUTEUR * TAILLE_CASE)
 				canMove = true;
 			break;
 			
 			case 3 :
-			if(p.getX() + OFFSET_HORIZONTAL < NB_CASE_LARGEUR * TAILLE_CASE )
+			// Si on dépasse pas du plateau
+			if(p.getX() + LARGEUR_SPRITE < NB_CASE_LARGEUR * TAILLE_CASE)
 				canMove = true;
 			break;
 		}
