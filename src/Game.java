@@ -89,12 +89,24 @@ public class Game extends BasicGame{
 			}
 		}
 		g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
+		
+		//Carré BasDroite
+		g.drawRect(p.getX() + 8, p.getY() + 16, 8, 8);
+		
+		//Carré HautDroite
+		g.drawRect(p.getX() + 8, p.getY(),8,8);
+		
+		//Carré HautGauche 
+		g.drawRect(p.getX(), p.getY(), 8, 8);
+		//Carré BasGauche
+		g.drawRect(p.getX(), p.getY()+16, 8, 8);
 	}
 	
 	// Check difference between last render and now
 	@Override
 	public void update(GameContainer gc, int delta) throws SlickException
 	{
+		// Check if you can move before move
 		if(canMove(p,direction,delta))
 		{
 			if(this.isMoving)
@@ -139,6 +151,8 @@ public class Game extends BasicGame{
 		this.isMoving = false;
 	}
 	
+	
+	// Detect collision
 	public boolean canMove(Player p,int direction,int delta)
 	{
 		boolean canMove = false;
@@ -146,24 +160,24 @@ public class Game extends BasicGame{
 		{
 			case 0 :
 			// Si on dépasse pas du plateau	
-			if(p.getY() - delta*0.1f > 0)
+			if(p.getY() - delta*0.1f > 0 && getCaseFromCoord(p.getX(),p.getY()).getType() != "MUR" && getCaseFromCoord(p.getX() + 16, p.getY()).getType() != "MUR")
 				canMove = true;
 			break;
 			// Si on dépasse pas du plateau
 			case 1 :
-			if(p.getX() - delta*0.1f > 0)
+			if(p.getX() - delta*0.1f > 0 && getCaseFromCoord(p.getX(),p.getY()).getType() != "MUR" && getCaseFromCoord(p.getX(), p.getY() + 22).getType() != "MUR")
 				canMove = true;
 			break;
 			
 			case 2 :
 			// Si on dépasse pas du plateau
-			if(p.getY() + TAILLE_CASE< NB_CASE_HAUTEUR * TAILLE_CASE)
+			if(p.getY() + TAILLE_CASE< NB_CASE_HAUTEUR * TAILLE_CASE && getCaseFromCoord(p.getX(), p.getY() + 22).getType() !="MUR" && getCaseFromCoord(p.getX() + 16, p.getY() + 22).getType() != "MUR")
 				canMove = true;
 			break;
 			
 			case 3 :
 			// Si on dépasse pas du plateau
-			if(p.getX() + LARGEUR_SPRITE < NB_CASE_LARGEUR * TAILLE_CASE)
+			if(p.getX() + LARGEUR_SPRITE < NB_CASE_LARGEUR * TAILLE_CASE &&  getCaseFromCoord(p.getX() + 16, p.getY()).getType() != "MUR" && getCaseFromCoord(p.getX() + 16, p.getY() + 22).getType() != "MUR")
 				canMove = true;
 			break;
 		}
