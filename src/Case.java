@@ -47,4 +47,14 @@ public class Case {
 	{
 		return "X : " + this.getX() + " Y :" + this.getY() + " Type de la case : " + this.getType();
 	}
+	
+	public float getRealX()
+	{
+		return this.x * Game.TAILLE_CASE;
+	}
+	
+	public float getRealY()
+	{
+		return this.y * Game.TAILLE_CASE;
+	}
 }

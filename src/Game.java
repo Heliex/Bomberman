@@ -9,6 +9,7 @@ import org.newdawn.slick.BasicGame;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
+import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.SpriteSheet;
@@ -16,19 +17,30 @@ import org.newdawn.slick.SpriteSheet;
 public class Game extends BasicGame{
 	
 	// All static and no changing variables.
-	public final static int LARGEUR_SPRITE = 16, HAUTEUR_SPRITE = 32;
+	public final static int LARGEUR_SPRITE = 18, HAUTEUR_SPRITE = 32;
+	public final static int TAILLE_BOMB = 18;
+	public final static int TAILLE_EXPLOSION = 19;
 	public final static int TAILLE_CASE = 32;
+	public final static int NB_BOMB_AT_START = 3;
 	public final static int NB_CASE_HAUTEUR = 16, NB_CASE_LARGEUR = 25;
-	
+	public final static int OFFSET_VERTICAL = 30, OFFSET_HORIZONTAL = 16;
+	public final static int TIME_TO_EXPLODE = 3000;
 	// All static but modifiable variables.
-	public static int NB_BOMBE_AT_START = 3;
-	public static int NB_OBJECTIV = 3;
+	
+	public static int NB_BOMB_AVAILABLE= 3,NB_BOMB_ON_BOARD = 0;
+	public static int NB_OBJECTIVE = 3;
 	
 	// Other variables
 	private boolean isMoving = false;
 	private int direction = 0;
 	private Player p ;
 	private Case[][] plateau;
+	private Image wall,ground,indestructible_wall,groundGrass;
+	private Bomb[] bomb = new Bomb[NB_BOMB_AT_START];
+	private SpriteSheet sheet, bombSheet,explosionSheet;
+	private long timeToWait = 0;
+	
+	// Timer
 	public Game(String name)
 	{
 		super(name);
@@ -39,67 +51,39 @@ public class Game extends BasicGame{
 	public void init(GameContainer gc) throws SlickException
 	{
 		// Initialize SpriteSheet
-		SpriteSheet sheet = new SpriteSheet("images/Deplacement.png",16,32);
+		sheet = new SpriteSheet("images/Deplacements.png",LARGEUR_SPRITE,HAUTEUR_SPRITE);
+		bombSheet = new SpriteSheet("images/Bombe.png",TAILLE_BOMB,TAILLE_BOMB);
+		explosionSheet = new SpriteSheet("images/Explosions.png",TAILLE_EXPLOSION,TAILLE_EXPLOSION);
+		wall = new Image("images/Wall.png");
+		ground = new Image("images/Groundsecond.png");
+		groundGrass = new Image("images/Groundone.png");
+		indestructible_wall = new Image("images/Indestructible_wall.png");
+		// Initialize Player
 		p = new Player(sheet,0,0,0);
 		// Initialize plateau
 		plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
 		// Intialize level
-		File f = new File("niveaux/niveau1.txt");
-		try {
-			BufferedReader reader = new BufferedReader(new FileReader(f));
-			String line;
-			String type = "";
-			int i = 0;
-			while((line = reader.readLine()) != null)
-			{
-				for(int j = 0 ; j < line.length(); j++)
-				{
-					if(line.charAt(j) == '1')
-					{
-						type="MUR";
-					}
-					else
-					{
-						type="VIDE";
-					}
-					plateau[i][j] = new Case(j,i,type);
-				}
-				i++;
-			}
-			reader.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException io) {
-			// TODO Auto-generated catch block
-			io.printStackTrace();
-		}
+		File level = new File("niveaux/niveau1.txt");
+		initLevel(level);
+		
 	}
 	
 	// This method is called on some interval
 	@Override
 	public void render(GameContainer gc, Graphics g) throws SlickException
 	{
-		g.setBackground(new Color(0,0,0,.5f));
-		for(int i = 0 ; i < NB_CASE_HAUTEUR; i++)
+		if(NB_BOMB_ON_BOARD == 0 && TIME_TO_EXPLODE < timeToWait)
 		{
-			for(int j = 0 ; j < NB_CASE_LARGEUR ; j++)
-			{
-				g.drawRect(plateau[i][j].getX() * TAILLE_CASE, plateau[i][j].getY() * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE);
-			}
+			timeToWait = 0;
 		}
+		g.setBackground(new Color(255,255,255,.5f));
+		drawBoard(g);
+		drawArray(bomb,g);
+		// Draw Animation 
 		g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
 		
-		//Carré BasDroite
-		g.drawRect(p.getX() + 8, p.getY() + 16, 8, 8);
+		// Go throught the bombArray to redraw it
 		
-		//Carré HautDroite
-		g.drawRect(p.getX() + 8, p.getY(),8,8);
-		
-		//Carré HautGauche 
-		g.drawRect(p.getX(), p.getY(), 8, 8);
-		//Carré BasGauche
-		g.drawRect(p.getX(), p.getY()+16, 8, 8);
 	}
 	
 	// Check difference between last render and now
@@ -128,10 +112,9 @@ public class Game extends BasicGame{
 				}
 			}
 		}
+		
 			
 	}
-	
-	
 	
 	@Override
 	public void keyPressed(int key, char c)
@@ -142,6 +125,15 @@ public class Game extends BasicGame{
 		case Input.KEY_LEFT : this.direction = 1 ; this.isMoving = true; break;
 		case Input.KEY_DOWN : this.direction = 2 ; this.isMoving = true; break;
 		case Input.KEY_RIGHT : this.direction = 3 ; this.isMoving = true; break;
+		case Input.KEY_B: 
+			
+			if(NB_BOMB_ON_BOARD < NB_BOMB_AVAILABLE && timeToWait < (TIME_TO_EXPLODE * NB_BOMB_AVAILABLE))
+			{
+				timeToWait += TIME_TO_EXPLODE;
+				this.bomb[NB_BOMB_ON_BOARD] = new Bomb(bombSheet,p.getX(), p.getY(),new Explosion(p.getX(),p.getY(),explosionSheet));
+				NB_BOMB_ON_BOARD++;
+			}
+			break;
 		}
 	}
 	
@@ -155,35 +147,56 @@ public class Game extends BasicGame{
 	// Detect collision
 	public boolean canMove(Player p,int direction,int delta)
 	{
+		// For collision i did make 4 squares, represent each edges of sprites to Bomberman.
 		boolean canMove = false;
 		switch(direction)
 		{
 			case 0 :
-			// Si on dépasse pas du plateau	
-			if(p.getY() - delta*0.1f > 0 && getCaseFromCoord(p.getX(),p.getY()).getType() != "MUR" && getCaseFromCoord(p.getX() + 16, p.getY()).getType() != "MUR")
+			// If we're in the board And a case is not a wall or an indestructible wall
+			if(p.getY() - delta*0.1f > 0 
+					&& getCaseFromCoord(p.getX(),p.getY()).getType() != "WALL" 
+					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY()).getType() != "WALL"
+					&& getCaseFromCoord(p.getX(),p.getY()).getType() != "INDESTRUCTIBLE"
+					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY()).getType() != "INDESTRUCTIBLE"
+					)
 				canMove = true;
 			break;
-			// Si on dépasse pas du plateau
+			
 			case 1 :
-			if(p.getX() - delta*0.1f > 0 && getCaseFromCoord(p.getX(),p.getY()).getType() != "MUR" && getCaseFromCoord(p.getX(), p.getY() + 22).getType() != "MUR")
+			if(p.getX() - delta*0.1f > 0 
+					&& getCaseFromCoord(p.getX(),p.getY()+2).getType() != "WALL" 
+					&& getCaseFromCoord(p.getX(), p.getY() + OFFSET_VERTICAL).getType() != "WALL"
+					&& getCaseFromCoord(p.getX(),p.getY()+2).getType() != "INDESTRUCTIBLE"
+					&& getCaseFromCoord(p.getX(), p.getY() + OFFSET_VERTICAL).getType() != "INDESTRUCTIBLE"
+					)
 				canMove = true;
 			break;
 			
 			case 2 :
-			// Si on dépasse pas du plateau
-			if(p.getY() + TAILLE_CASE< NB_CASE_HAUTEUR * TAILLE_CASE && getCaseFromCoord(p.getX(), p.getY() + 22).getType() !="MUR" && getCaseFromCoord(p.getX() + 16, p.getY() + 22).getType() != "MUR")
+			if(p.getY() + TAILLE_CASE< NB_CASE_HAUTEUR * TAILLE_CASE 
+					&& getCaseFromCoord(p.getX(), p.getY() + OFFSET_VERTICAL).getType() !="WALL" 
+					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY() + OFFSET_VERTICAL).getType() != "WALL"
+					&& getCaseFromCoord(p.getX(), p.getY() + OFFSET_VERTICAL).getType() !="INDESTRUCTIBLE"
+					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY() + OFFSET_VERTICAL).getType() != "INDESTRUCTIBLE"
+					)
 				canMove = true;
 			break;
 			
 			case 3 :
-			// Si on dépasse pas du plateau
-			if(p.getX() + LARGEUR_SPRITE < NB_CASE_LARGEUR * TAILLE_CASE &&  getCaseFromCoord(p.getX() + 16, p.getY()).getType() != "MUR" && getCaseFromCoord(p.getX() + 16, p.getY() + 22).getType() != "MUR")
+			if(p.getX() + LARGEUR_SPRITE < NB_CASE_LARGEUR * TAILLE_CASE 
+					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY()+2).getType() != "WALL" 
+					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY() + OFFSET_VERTICAL).getType() != "WALL"
+					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY()+2).getType() != "INDESTRUCTIBLE"
+					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY() + OFFSET_VERTICAL).getType() != "INDESTRUCTIBLE"
+					)
 				canMove = true;
 			break;
 		}
 		return canMove;
 	}
 	
+	
+	// I get the case from x and y coord
 	public Case getCaseFromCoord(float x, float y)
 	{
 		for(int i = 0 ; i < NB_CASE_HAUTEUR ; i++)
@@ -193,12 +206,121 @@ public class Game extends BasicGame{
 				Case c = plateau[i][j];
 				if(x >= (c.getX()*TAILLE_CASE) && x <= (c.getX() * TAILLE_CASE) + TAILLE_CASE && y >= (c.getY()*TAILLE_CASE) && y <= (c.getY() * TAILLE_CASE) + TAILLE_CASE)
 				{
-					System.out.println(c);
 					return c;
 				}
 			}
 		}
 		return null;
+	}
+	
+	
+	private void initLevel(File f)
+	{
+		// Read the level file
+				try {
+					BufferedReader reader = new BufferedReader(new FileReader(f));
+					String line;
+					String type = "";
+					int i = 0;
+					while((line = reader.readLine()) != null) // While you got line
+					{
+						for(int j = 0 ; j < line.length(); j++)
+						{
+							switch(line.charAt(j))
+							{
+							case '0':
+								type="GROUND";
+								break;
+							case '1':
+								type="GRASSGROUND";
+								break;
+							case '2':
+								type="WALL";
+								break;
+							case '3':
+								type ="INDESTRUCTIBLE";
+							}
+							
+							plateau[i][j] = new Case(j,i,type); // Create a case with the type set before
+						}
+						i++;
+					}
+					reader.close(); // Close the buffer
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException io) {
+					// TODO Auto-generated catch block
+					io.printStackTrace();
+				}
+	}
+	
+	// Draw the board 
+	private void drawBoard(Graphics g)
+	{
+		Image toDraw = null;
+		for(int i = 0 ; i < NB_CASE_HAUTEUR; i++)
+		{
+			for(int j = 0 ; j < NB_CASE_LARGEUR ; j++)
+			{
+				switch(plateau[i][j].getType())
+				{
+				case "WALL":
+					toDraw = wall;
+					break;
+				case "GROUND":
+					toDraw = ground;
+					break;
+				case "GRASSGROUND":
+					toDraw = groundGrass;
+					break;
+				case "INDESTRUCTIBLE":
+					toDraw = indestructible_wall;
+					break;
+				default:
+					toDraw = ground;
+					break;
+				}
+				g.drawImage(toDraw,plateau[i][j].getRealX(),plateau[i][j].getRealY());
+			}
+		}
+	}
+	
+	// Method for droing the bombArray on graphics
+	private void drawArray(Bomb[] array,Graphics g)
+	{
+		for(int i = 0 ; i < array.length; i++)
+		{
+			if(array[i] != null)
+			{
+				
+				if(array[i].getAnimation().isStopped()) // I build explosion when the bomb is stopped
+				{
+					if(array[i].getExplosion().getAnimation().getFrame() == 4 && array[i].getExplosion().isDrawable())
+					{
+						array[i].getExplosion().setDrawable(false);
+						
+					}
+					else if(array[i].getExplosion().isDrawable())
+					{
+						g.drawAnimation(array[i].getExplosion().getAnimation(), array[i].getExplosion().getX(), array[i].getExplosion().getY());
+					}	
+				}
+				else if(Bomb.getTime() - array[i].getFirstTime() > TIME_TO_EXPLODE)
+				{
+					
+					array[i].getAnimation().stop();
+					array[i].getExplosion().setDrawable(true);		
+					NB_BOMB_ON_BOARD--;
+					
+				}
+				else
+				{
+					g.drawAnimation(array[i].getAnimation(),array[i].getXBomb(),array[i].getYBomb());
+				}	
+			}	
+		}
+		
 	}
 }
 
