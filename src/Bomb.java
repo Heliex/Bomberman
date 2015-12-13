@@ -9,9 +9,11 @@ public class Bomb {
 	private float xBomb,yBomb;
 	private long firstTime;
 	private Explosion explosion;
+	public boolean isDrawable;
 	
 	public Bomb(SpriteSheet sheet,float x, float y,Explosion explosion)
 	{
+		this.isDrawable = true;
 		this.explosion = explosion;
 		firstTime = getTime();
 		this.xBomb = x;
@@ -73,6 +75,11 @@ public class Bomb {
 		return this.firstTime;
 	}
 	
+	public void setFirstTime(long time)
+	{
+		this.firstTime = time;
+	}
+	
 	public String toString()
 	{
 		return "XBomb : " + this.getXBomb() + " YBomb : " + this.getYBomb() ;
@@ -81,5 +88,19 @@ public class Bomb {
 	public Explosion getExplosion()
 	{
 		return this.explosion;
+	}
+	
+	public void setExplosion(Explosion e)
+	{
+		this.explosion =e;
+	}
+	public boolean isDrawable()
+	{
+		return this.isDrawable;
+	}
+	
+	public void setDrawable(boolean isDrawable)
+	{
+		this.isDrawable = isDrawable;
 	}
 }

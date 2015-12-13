@@ -14,6 +14,7 @@ import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.SpriteSheet;
 
+
 public class Game extends BasicGame{
 	
 	// All static and no changing variables.
@@ -22,9 +23,10 @@ public class Game extends BasicGame{
 	public final static int TAILLE_EXPLOSION = 19;
 	public final static int TAILLE_CASE = 32;
 	public final static int NB_BOMB_AT_START = 3;
-	public final static int NB_CASE_HAUTEUR = 16, NB_CASE_LARGEUR = 25;
+	public final static int NB_CASE_HAUTEUR = 19, NB_CASE_LARGEUR = 25;
 	public final static int OFFSET_VERTICAL = 30, OFFSET_HORIZONTAL = 16;
-	public final static int TIME_TO_EXPLODE = 3000;
+	public final static int TIME_TO_EXPLODE = 4000;
+	
 	// All static but modifiable variables.
 	
 	public static int NB_BOMB_AVAILABLE= 3,NB_BOMB_ON_BOARD = 0;
@@ -39,8 +41,8 @@ public class Game extends BasicGame{
 	private Bomb[] bomb = new Bomb[NB_BOMB_AT_START];
 	private SpriteSheet sheet, bombSheet,explosionSheet;
 	private long timeToWait = 0;
-	
-	// Timer
+	//private static BombermanAudioPlayer audioPlayer;
+
 	public Game(String name)
 	{
 		super(name);
@@ -54,12 +56,14 @@ public class Game extends BasicGame{
 		sheet = new SpriteSheet("images/Deplacements.png",LARGEUR_SPRITE,HAUTEUR_SPRITE);
 		bombSheet = new SpriteSheet("images/Bombe.png",TAILLE_BOMB,TAILLE_BOMB);
 		explosionSheet = new SpriteSheet("images/Explosions.png",TAILLE_EXPLOSION,TAILLE_EXPLOSION);
+		
+		// Initialize Images
 		wall = new Image("images/Wall.png");
 		ground = new Image("images/Groundsecond.png");
 		groundGrass = new Image("images/Groundone.png");
 		indestructible_wall = new Image("images/Indestructible_wall.png");
 		// Initialize Player
-		p = new Player(sheet,0,0,0);
+		p = new Player(sheet,0,0,TAILLE_CASE);
 		// Initialize plateau
 		plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
 		// Intialize level
@@ -79,6 +83,7 @@ public class Game extends BasicGame{
 		g.setBackground(new Color(255,255,255,.5f));
 		drawBoard(g);
 		drawArray(bomb,g);
+		drawExplosion(bomb,g);
 		// Draw Animation 
 		g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
 		
@@ -130,11 +135,17 @@ public class Game extends BasicGame{
 			if(NB_BOMB_ON_BOARD < NB_BOMB_AVAILABLE && timeToWait < (TIME_TO_EXPLODE * NB_BOMB_AVAILABLE))
 			{
 				timeToWait += TIME_TO_EXPLODE;
-				this.bomb[NB_BOMB_ON_BOARD] = new Bomb(bombSheet,p.getX(), p.getY(),new Explosion(p.getX(),p.getY(),explosionSheet));
+				System.out.println("NB BOMB AU MOMENT DU PRESS B : " + NB_BOMB_ON_BOARD);
+				this.bomb[NB_BOMB_ON_BOARD] = new Bomb(bombSheet,p.getX(), p.getY()+(TAILLE_BOMB /2),new Explosion(p.getX()+ (TAILLE_EXPLOSION/2),p.getY()+(TAILLE_EXPLOSION/2),explosionSheet));
 				NB_BOMB_ON_BOARD++;
+				System.out.println("NB_BOMB_ON_BOARD[AVANT] : " + NB_BOMB_ON_BOARD);
 			}
 			break;
+		case Input.KEY_ESCAPE:
+			System.exit(0);
+			break;
 		}
+		
 	}
 	
 	@Override
@@ -293,34 +304,77 @@ public class Game extends BasicGame{
 		{
 			if(array[i] != null)
 			{
-				
-				if(array[i].getAnimation().isStopped()) // I build explosion when the bomb is stopped
+				if (Bomb.getTime() - array[i].getFirstTime()  > TIME_TO_EXPLODE)
 				{
-					if(array[i].getExplosion().getAnimation().getFrame() == 4 && array[i].getExplosion().isDrawable())
+					array[i].setDrawable(false);
+					array[i].setFirstTime(Bomb.getTime());
+					if(array[i].getExplosion() != null)
+					{
+						array[i].getExplosion().setDrawable(true);
+					}
+				}
+				else if(array[i].isDrawable())
+				{
+					g.drawAnimation(array[i].getAnimation(),array[i].getXBomb(),array[i].getYBomb());
+					
+				}
+			}
+		}
+	}
+	
+	private void drawExplosion(Bomb[] array,Graphics g)
+	{
+		for(int i = 0 ; i< array.length; i++)
+		{
+			if(array[i] != null)
+			{
+				if(array[i].getExplosion() != null)
+				{
+					if(array[i].getExplosion().getAnimation(i).getFrame() == 4 && array[i].getExplosion().isDrawable())
 					{
 						array[i].getExplosion().setDrawable(false);
-						
+						array[i].setExplosion(null);
+						if(NB_BOMB_ON_BOARD > 0)
+						{
+							NB_BOMB_ON_BOARD--;
+							System.out.println("NB BOMB ON BOARD[APRES] : " + NB_BOMB_ON_BOARD);
+						}
+							
 					}
 					else if(array[i].getExplosion().isDrawable())
 					{
-						g.drawAnimation(array[i].getExplosion().getAnimation(), array[i].getExplosion().getX(), array[i].getExplosion().getY());
-					}	
+						g.drawAnimation(array[i].getExplosion().getAnimation()[0], array[i].getXBomb(), array[i].getYBomb());
+						checkExplode(array[i].getXBomb() - TAILLE_EXPLOSION, array[i].getYBomb());
+						g.drawAnimation(array[i].getExplosion().getAnimation()[1], array[i].getXBomb() - TAILLE_EXPLOSION, array[i].getYBomb());
+						checkExplode(array[i].getXBomb() - TAILLE_EXPLOSION * 2, array[i].getYBomb());
+						g.drawAnimation(array[i].getExplosion().getAnimation()[2], array[i].getXBomb() - TAILLE_EXPLOSION * 2, array[i].getYBomb());
+						checkExplode(array[i].getXBomb() + TAILLE_EXPLOSION, array[i].getYBomb());
+						g.drawAnimation(array[i].getExplosion().getAnimation()[3], array[i].getXBomb() + TAILLE_EXPLOSION, array[i].getYBomb());
+						checkExplode(array[i].getXBomb() + TAILLE_EXPLOSION * 2, array[i].getYBomb());
+						g.drawAnimation(array[i].getExplosion().getAnimation()[4], array[i].getXBomb() + TAILLE_EXPLOSION * 2, array[i].getYBomb());
+						checkExplode(array[i].getXBomb(), array[i].getYBomb() - TAILLE_EXPLOSION);
+						g.drawAnimation(array[i].getExplosion().getAnimation()[5], array[i].getXBomb(), array[i].getYBomb() - TAILLE_EXPLOSION);
+						checkExplode(array[i].getXBomb(), array[i].getYBomb() - TAILLE_EXPLOSION * 2);
+						g.drawAnimation(array[i].getExplosion().getAnimation()[6], array[i].getXBomb(), array[i].getYBomb() - TAILLE_EXPLOSION * 2);
+						checkExplode(array[i].getXBomb(), array[i].getYBomb() + TAILLE_EXPLOSION);
+						g.drawAnimation(array[i].getExplosion().getAnimation()[7], array[i].getXBomb(), array[i].getYBomb() + TAILLE_EXPLOSION);
+						checkExplode(array[i].getXBomb(), array[i].getYBomb() + TAILLE_EXPLOSION * 2 );
+						g.drawAnimation(array[i].getExplosion().getAnimation()[8], array[i].getXBomb(), array[i].getYBomb() + TAILLE_EXPLOSION * 2 );
+					}
 				}
-				else if(Bomb.getTime() - array[i].getFirstTime() > TIME_TO_EXPLODE)
-				{
-					
-					array[i].getAnimation().stop();
-					array[i].getExplosion().setDrawable(true);		
-					NB_BOMB_ON_BOARD--;
-					
-				}
-				else
-				{
-					g.drawAnimation(array[i].getAnimation(),array[i].getXBomb(),array[i].getYBomb());
-				}	
-			}	
+			}
 		}
-		
+	}
+	
+	private void checkExplode(float x, float y)
+	{
+		if(x >= 0 && y >= 0 && x < NB_CASE_LARGEUR * TAILLE_CASE && y < NB_CASE_HAUTEUR * TAILLE_CASE)
+		{
+			Case c = getCaseFromCoord(x, y);
+			if(c.getType() == "WALL")
+			{
+				c.setType("GROUND");
+			}
+		}
 	}
 }
-

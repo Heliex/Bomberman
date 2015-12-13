@@ -43,6 +43,11 @@ public class Case {
 		return type;
 	}
 	
+	public void setType(String type)
+	{
+		this.type = type;
+	}
+	
 	public String toString()
 	{
 		return "X : " + this.getX() + " Y :" + this.getY() + " Type de la case : " + this.getType();

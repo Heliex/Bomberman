@@ -5,7 +5,7 @@ public class Explosion {
 	
 	private float x,y;
 	private SpriteSheet sheet;
-	private Animation animation;
+	private Animation[] animation = new Animation[9];
 	private boolean isDrawable ;
 	
 	public Explosion(float x, float y, SpriteSheet sheet)
@@ -14,12 +14,15 @@ public class Explosion {
 		this.x = x;
 		this.y = y;
 		this.sheet = sheet;
-		this.animation = new Animation();
-		animation.addFrame(sheet.getSprite(0, 0), 120);
-		animation.addFrame(sheet.getSprite(1, 0), 120);
-		animation.addFrame(sheet.getSprite(2, 0), 120);
-		animation.addFrame(sheet.getSprite(3, 0), 120);
-		animation.addFrame(sheet.getSprite(4, 0), 120);
+		animation[0] = loadAnimation(sheet, 4,0, 0);
+		animation[1] = loadAnimation(sheet, 4,0, 1);
+		animation[2] = loadAnimation(sheet, 4,0, 2);
+		animation[3] = loadAnimation(sheet, 4,0, 3);
+		animation[4] = loadAnimation(sheet, 4,0, 4);
+		animation[5] = loadAnimation(sheet, 4,0, 5);
+		animation[6] = loadAnimation(sheet, 4,0, 6);
+		animation[7] = loadAnimation(sheet, 4,0, 7);
+		animation[8] = loadAnimation(sheet, 4,0, 8);
 	}
 	
 	public float getX()
@@ -52,7 +55,7 @@ public class Explosion {
 		this.sheet = sheet;
 	}
 	
-	public Animation getAnimation()
+	public Animation[] getAnimation()
 	{
 		return this.animation;
 	}
@@ -66,8 +69,23 @@ public class Explosion {
 	{
 		this.isDrawable = isDrawable;
 	}
-	public void setAnimation(Animation a)
+	public void setAnimation(Animation[] a)
 	{
 		this.animation = a;
+	}
+	
+	private Animation loadAnimation(SpriteSheet sheet,int startX,int endX , int y)
+	{
+		Animation animation = new Animation();
+		for(int i = startX ; i >= endX ; i--)
+		{
+			animation.addFrame(sheet.getSprite(i, y),100);
+		}
+		return animation;
+	}
+	
+	public Animation getAnimation(int index)
+	{
+		return this.animation[index];
 	}
 }
