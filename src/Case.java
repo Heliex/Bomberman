@@ -50,7 +50,7 @@ public class Case {
 	
 	public String toString()
 	{
-		return "X : " + this.getX() + " Y :" + this.getY() + " Type de la case : " + this.getType();
+		return "X : " + this.getRealX() + " Y :" + this.getRealY() + " Type de la case : " + this.getType();
 	}
 	
 	public float getRealX()

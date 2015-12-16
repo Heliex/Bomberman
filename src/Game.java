@@ -13,6 +13,7 @@ import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.SpriteSheet;
+import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
@@ -25,7 +26,7 @@ public class Game extends BasicGameState{
 	public final static int TAILLE_CASE = 32;
 	public final static int NB_BOMB_AT_START = 3;
 	public final static int NB_CASE_HAUTEUR = 19, NB_CASE_LARGEUR = 25;
-	public final static int OFFSET_VERTICAL = 32, OFFSET_HORIZONTAL = 16;
+	public final static int OFFSET_VERTICAL_Y_LEFTORRIGHT = 29, OFFSET_HORIZONTAL_X_LEFTORRIGHT = 16;
 	public final static int TIME_TO_EXPLODE = 4000;
 	
 	// All static but modifiable variables.
@@ -75,15 +76,15 @@ public class Game extends BasicGameState{
 	public void render(GameContainer gc,StateBasedGame game, Graphics g) throws SlickException
 	{
 		g.setBackground(new Color(255,255,255,.5f));
+		// Draw Board
 		drawBoard(g);
+		
+		// Draw All Bombe And Explosion
 		drawArray(p.getBombe(),g);
 		drawExplosion(p.getBombe(),g);
+		
 		// Draw Animation 
 		g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
-		g.fillRect(p.getX(), p.getY()+TAILLE_CASE/4, TAILLE_CASE/4,TAILLE_CASE/4);
-		g.fillRect(p.getX() +TAILLE_CASE/4 , p.getY()+TAILLE_CASE/4, TAILLE_CASE/4, TAILLE_CASE/4);
-		// Go throught the bombArray to redraw it
-		
 	}
 	
 	// Check difference between last render and now
@@ -167,26 +168,80 @@ public class Game extends BasicGameState{
 				
 				if(p.getY() - delta * 0.1f > 0 )
 				{
-					canMove = true;
-					Case HautGauche = getCaseFromCoord(p.getX(), p.getY() - delta*0.1f);
-					Case HautDroite = getCaseFromCoord(p.getX() + TAILLE_CASE, p.getY() - delta *0.1f);
-					System.out.println("HAUTGauche : " + HautGauche);
-					System.out.println("HautDroite : " + HautDroite);
-				}
+					Rectangle rect = new Rectangle(p.getX(), p.getY() - delta*0.1f,OFFSET_HORIZONTAL_X_LEFTORRIGHT,OFFSET_VERTICAL_Y_LEFTORRIGHT);
+					float[] points = rect.getPoints();
+					Case hautGauche = getCaseFromCoord(points[0], points[1]);
+					Case hautDroite = getCaseFromCoord(points[2], points[3]);
+					if(hautGauche != null && hautDroite != null)
+					{
+						if(hautGauche.getType() != "WALL"
+								&& hautGauche.getType() != "INDESTRUCTIBLE"
+								&& hautDroite.getType() != "WALL"
+								&& hautDroite.getType() != "INDESTRUCTIBLE"
+								)
+						canMove = true;
+					}
 					
-				
+				}
 			break;
 			
 			case 1 : // LEFT
-				canMove = true;
+				if(p.getX() - delta * 0.1f > 0)
+				{
+					Rectangle rect = new Rectangle(p.getX() - delta*0.1f, p.getY(),OFFSET_HORIZONTAL_X_LEFTORRIGHT, OFFSET_VERTICAL_Y_LEFTORRIGHT);
+					float[] points = rect.getPoints();
+					Case hautGauche = getCaseFromCoord(points[0], points[1]);
+					Case basGauche = getCaseFromCoord(points[6], points[7]);
+					if(hautGauche != null && basGauche != null)
+					{
+						if(hautGauche.getType() != "WALL"
+								&& hautGauche.getType() != "INDESTRUCTIBLE"
+								&& basGauche.getType() != "WALL"
+								&& basGauche.getType() != "INDESTRUCTIBLE"
+								)
+						canMove = true;
+					}
+
+				}
+				
 			break;
 			
 			case 2 : // DOWN
-				canMove = true;
+				if(p.getY() + delta * 0.1f < Main.HEIGHT)
+				{
+					Rectangle rect = new Rectangle(p.getX(),p.getY() + delta*0.1f,OFFSET_HORIZONTAL_X_LEFTORRIGHT,OFFSET_VERTICAL_Y_LEFTORRIGHT);
+					float[] points = rect.getPoints();
+					Case basDroite = getCaseFromCoord(points[4], points[5]);
+					Case basGauche = getCaseFromCoord(points[6], points[7]);
+					
+					if(basDroite != null && basGauche != null)
+					{
+						if(basDroite.getType() != "WALL"
+								&& basDroite.getType() != "INDESTRUCTIBLE"
+								&& basGauche.getType() != "WALL"
+								&& basGauche.getType() != "INDESTRUCTIBLE")
+							canMove = true;
+					}
+				}
 			break;
 			
 			case 3 : // RIGHT
-				canMove = true;
+				if(p.getX() + delta*0.1f < Main.WIDTH)
+				{
+					Rectangle rect = new Rectangle(p.getX()+delta*0.1f,p.getY(),OFFSET_HORIZONTAL_X_LEFTORRIGHT,OFFSET_VERTICAL_Y_LEFTORRIGHT);
+					float[] points = rect.getPoints();
+					Case hautDroite = getCaseFromCoord(points[2], points[3]);
+					Case basDroite = getCaseFromCoord(points[4], points[5]);
+					
+					if(hautDroite != null && basDroite != null)
+					{
+						if(basDroite.getType() != "WALL"
+								&& basDroite.getType() != "INDESTRUCTIBLE"
+								&& hautDroite.getType() != "WALL"
+								&& hautDroite.getType() != "INDESTRUCTIBLE")
+							canMove = true;
+					}
+				}
 			break;
 		}
 		return canMove;
