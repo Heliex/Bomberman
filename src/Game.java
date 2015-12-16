@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
@@ -21,12 +21,11 @@ public class Game extends BasicGameState{
 	
 	// All static and no changing variables.
 	public final static int LARGEUR_SPRITE = 18, HAUTEUR_SPRITE = 32;
-	public final static int TAILLE_BOMB = 18;
-	public final static int TAILLE_EXPLOSION = 19;
+	public final static int TAILLE_BOMB = 16;
 	public final static int TAILLE_CASE = 32;
 	public final static int NB_BOMB_AT_START = 3;
 	public final static int NB_CASE_HAUTEUR = 19, NB_CASE_LARGEUR = 25;
-	public final static int OFFSET_VERTICAL = 30, OFFSET_HORIZONTAL = 16;
+	public final static int OFFSET_VERTICAL = 32, OFFSET_HORIZONTAL = 16;
 	public final static int TIME_TO_EXPLODE = 4000;
 	
 	// All static but modifiable variables.
@@ -55,7 +54,7 @@ public class Game extends BasicGameState{
 		// Initialize SpriteSheet
 		sheet = new SpriteSheet("images/Deplacements.png",LARGEUR_SPRITE,HAUTEUR_SPRITE);
 		bombSheet = new SpriteSheet("images/Bombe.png",TAILLE_BOMB,TAILLE_BOMB);
-		explosionSheet = new SpriteSheet("images/Explosions.png",TAILLE_EXPLOSION,TAILLE_EXPLOSION);
+		explosionSheet = new SpriteSheet("images/Explosions.png",TAILLE_BOMB,TAILLE_BOMB);
 		// Initialize Images
 		wall = new Image("images/Wall.png");
 		ground = new Image("images/Groundsecond.png");
@@ -81,7 +80,8 @@ public class Game extends BasicGameState{
 		drawExplosion(p.getBombe(),g);
 		// Draw Animation 
 		g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
-		
+		g.fillRect(p.getX(), p.getY()+TAILLE_CASE/4, TAILLE_CASE/4,TAILLE_CASE/4);
+		g.fillRect(p.getX() +TAILLE_CASE/4 , p.getY()+TAILLE_CASE/4, TAILLE_CASE/4, TAILLE_CASE/4);
 		// Go throught the bombArray to redraw it
 		
 	}
@@ -125,16 +125,19 @@ public class Game extends BasicGameState{
 		case Input.KEY_LEFT : this.direction = 1 ; this.isMoving = true; break;
 		case Input.KEY_DOWN : this.direction = 2 ; this.isMoving = true; break;
 		case Input.KEY_RIGHT : this.direction = 3 ; this.isMoving = true; break;
-		case Input.KEY_B: 
-			if(NB_BOMB_ON_BOARD < NB_BOMB_AVAILABLE && p.getBombe().size() < NB_BOMB_AVAILABLE)
+		case Input.KEY_B:
+			System.out.println(p.getBombe().size());
+			if(p.getBombe().size() < NB_BOMB_AVAILABLE)
 			{
 				new Thread(new Runnable(){
 					public void run()
 					{
-							Bomb b = new Bomb(bombSheet,p.getX(),p.getY(),new Explosion(p.getX(),p.getY()+TAILLE_CASE/2,explosionSheet));
+						Case c = getCaseFromCoord(p.getX()+TAILLE_CASE/2, p.getY()+TAILLE_CASE - (TAILLE_CASE/2));
+						if(c.getType() != "MUR" && c.getType() != "INDESTRUCTIBLE")
+						{
+							Bomb b = new Bomb(bombSheet,c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,new Explosion(c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,explosionSheet));
 							p.getBombe().add(b);
-							NB_BOMB_ON_BOARD++;
-						
+						}
 					}
 				}).start();
 			}
@@ -160,44 +163,29 @@ public class Game extends BasicGameState{
 		boolean canMove = false;
 		switch(direction)
 		{
-			case 0 :
-			// If we're in the board And a case is not a wall or an indestructible wall
-			if(p.getY() - delta*0.1f > 0 
-					&& getCaseFromCoord(p.getX(),p.getY()).getType() != "WALL" 
-					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY()).getType() != "WALL"
-					&& getCaseFromCoord(p.getX(),p.getY()).getType() != "INDESTRUCTIBLE"
-					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY()).getType() != "INDESTRUCTIBLE"
-					)
+			case 0 : // UP
+				
+				if(p.getY() - delta * 0.1f > 0 )
+				{
+					canMove = true;
+					Case HautGauche = getCaseFromCoord(p.getX(), p.getY() - delta*0.1f);
+					Case HautDroite = getCaseFromCoord(p.getX() + TAILLE_CASE, p.getY() - delta *0.1f);
+					System.out.println("HAUTGauche : " + HautGauche);
+					System.out.println("HautDroite : " + HautDroite);
+				}
+					
+				
+			break;
+			
+			case 1 : // LEFT
 				canMove = true;
 			break;
 			
-			case 1 :
-			if(p.getX() - delta*0.1f > 0 
-					&& getCaseFromCoord(p.getX(),p.getY()+2).getType() != "WALL" 
-					&& getCaseFromCoord(p.getX(), p.getY() + OFFSET_VERTICAL).getType() != "WALL"
-					&& getCaseFromCoord(p.getX(),p.getY()+2).getType() != "INDESTRUCTIBLE"
-					&& getCaseFromCoord(p.getX(), p.getY() + OFFSET_VERTICAL).getType() != "INDESTRUCTIBLE"
-					)
+			case 2 : // DOWN
 				canMove = true;
 			break;
 			
-			case 2 :
-			if(p.getY() + TAILLE_CASE< NB_CASE_HAUTEUR * TAILLE_CASE 
-					&& getCaseFromCoord(p.getX(), p.getY() + OFFSET_VERTICAL).getType() !="WALL" 
-					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY() + OFFSET_VERTICAL).getType() != "WALL"
-					&& getCaseFromCoord(p.getX(), p.getY() + OFFSET_VERTICAL).getType() !="INDESTRUCTIBLE"
-					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY() + OFFSET_VERTICAL).getType() != "INDESTRUCTIBLE"
-					)
-				canMove = true;
-			break;
-			
-			case 3 :
-			if(p.getX() + LARGEUR_SPRITE < NB_CASE_LARGEUR * TAILLE_CASE 
-					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY()+2).getType() != "WALL" 
-					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY() + OFFSET_VERTICAL).getType() != "WALL"
-					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY()+2).getType() != "INDESTRUCTIBLE"
-					&& getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL, p.getY() + OFFSET_VERTICAL).getType() != "INDESTRUCTIBLE"
-					)
+			case 3 : // RIGHT
 				canMove = true;
 			break;
 		}
@@ -213,7 +201,7 @@ public class Game extends BasicGameState{
 			for(int j = 0 ; j < NB_CASE_LARGEUR ; j++)
 			{
 				Case c = plateau[i][j];
-				if(x >= (c.getX()*TAILLE_CASE) && x <= (c.getX() * TAILLE_CASE) + TAILLE_CASE && y >= (c.getY()*TAILLE_CASE) && y <= (c.getY() * TAILLE_CASE) + TAILLE_CASE)
+				if(x > c.getRealX() && x <= c.getRealX() + TAILLE_CASE && y > c.getRealY() && y <= c.getRealY() + TAILLE_CASE)
 				{
 					return c;
 				}
@@ -272,31 +260,31 @@ public class Game extends BasicGameState{
 		{
 			for(int j = 0 ; j < NB_CASE_LARGEUR ; j++)
 			{
-				switch(plateau[i][j].getType())
-				{
-				case "WALL":
-					toDraw = wall;
-					break;
-				case "GROUND":
-					toDraw = ground;
-					break;
-				case "GRASSGROUND":
-					toDraw = groundGrass;
-					break;
-				case "INDESTRUCTIBLE":
-					toDraw = indestructible_wall;
-					break;
-				default:
-					toDraw = ground;
-					break;
-				}
-				g.drawImage(toDraw,plateau[i][j].getRealX(),plateau[i][j].getRealY());
+					switch(plateau[i][j].getType())
+					{
+					case "WALL":
+						toDraw = wall;
+						break;
+					case "GROUND":
+						toDraw = ground;
+						break;
+					case "GRASSGROUND":
+						toDraw = groundGrass;
+						break;
+					case "INDESTRUCTIBLE":
+						toDraw = indestructible_wall;
+						break;
+					default:
+						toDraw = ground;
+						break;
+					}
+					g.drawImage(toDraw,plateau[i][j].getRealX(),plateau[i][j].getRealY());
 			}
 		}
 	}
 	
 	// Method for droing the bombArray on graphics
-	private void drawArray(ArrayList<Bomb> array,Graphics g)
+	private void drawArray(LinkedList<Bomb> array,Graphics g)
 	{
 		for(int i = 0 ; i < array.size(); i++)
 		{
@@ -320,7 +308,7 @@ public class Game extends BasicGameState{
 		}
 	}
 	
-	private void drawExplosion(ArrayList<Bomb> array,Graphics g)
+	private void drawExplosion(LinkedList<Bomb> array,Graphics g)
 	{
 		for(int i = 0 ; i< array.size(); i++)
 		{
@@ -330,55 +318,43 @@ public class Game extends BasicGameState{
 				{
 					if(array.get(i).getExplosion().getAnimation(i).getFrame() == 4 && array.get(i).getExplosion().isDrawable())
 					{
-						if(array.size() > (NB_BOMB_AVAILABLE - NB_BOMB_ON_BOARD))
-						{
-							array.remove((NB_BOMB_AVAILABLE - NB_BOMB_ON_BOARD));
-							if(NB_BOMB_ON_BOARD > 0)
-							{
-								NB_BOMB_ON_BOARD--;
-							}
-						}	
+						array.removeFirst();
 					}
 					else if(array.get(i).getExplosion().isDrawable())
 					{
 						g.drawAnimation(array.get(i).getExplosion().getAnimation()[0], array.get(i).getXBomb(),array.get(i).getYBomb());
-						checkExplode(array.get(i).getXBomb() - TAILLE_EXPLOSION, array.get(i).getYBomb());
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[1], array.get(i).getXBomb() - TAILLE_EXPLOSION, array.get(i).getYBomb());
-						checkExplode(array.get(i).getXBomb() - TAILLE_EXPLOSION * 2,array.get(i).getYBomb());
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[2], array.get(i).getXBomb() - TAILLE_EXPLOSION * 2, array.get(i).getYBomb());
-						checkExplode(array.get(i).getXBomb() + TAILLE_EXPLOSION, array.get(i).getYBomb());
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[3], array.get(i).getXBomb() + TAILLE_EXPLOSION, array.get(i).getYBomb());
-						checkExplode(array.get(i).getXBomb() + TAILLE_EXPLOSION * 2, array.get(i).getYBomb());
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[4], array.get(i).getXBomb() + TAILLE_EXPLOSION * 2, array.get(i).getYBomb());
-						checkExplode(array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_EXPLOSION);
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[5], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_EXPLOSION);
-						checkExplode(array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_EXPLOSION * 2);
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[6], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_EXPLOSION * 2);
-						checkExplode(array.get(i).getXBomb(), array.get(i).getYBomb() + TAILLE_EXPLOSION);
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[7], array.get(i).getXBomb(), array.get(i).getYBomb() + TAILLE_EXPLOSION);
-						checkExplode(array.get(i).getXBomb(), array.get(i).getYBomb() + TAILLE_EXPLOSION * 2 );
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[8], array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_EXPLOSION * 2 );
+						canRemove(array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_CASE);
+						g.drawAnimation(array.get(i).getExplosion().getAnimation()[1], array.get(i).getXBomb() - TAILLE_BOMB, array.get(i).getYBomb());
+						g.drawAnimation(array.get(i).getExplosion().getAnimation()[2], array.get(i).getXBomb() - TAILLE_BOMB * 2, array.get(i).getYBomb());
+						
+						canRemove(array.get(i).getXBomb()+ TAILLE_CASE,array.get(i).getYBomb());
+						g.drawAnimation(array.get(i).getExplosion().getAnimation()[3], array.get(i).getXBomb() + TAILLE_BOMB, array.get(i).getYBomb());
+						g.drawAnimation(array.get(i).getExplosion().getAnimation()[4], array.get(i).getXBomb() + TAILLE_BOMB * 2, array.get(i).getYBomb());
+						canRemove(array.get(i).getXBomb(),array.get(i).getYBomb() - TAILLE_CASE);
+						g.drawAnimation(array.get(i).getExplosion().getAnimation()[5], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_BOMB);
+						g.drawAnimation(array.get(i).getExplosion().getAnimation()[6], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_BOMB * 2);
+						
+						canRemove(array.get(i).getXBomb() - TAILLE_CASE,array.get(i).getYBomb());
+						g.drawAnimation(array.get(i).getExplosion().getAnimation()[7], array.get(i).getXBomb(), array.get(i).getYBomb() + TAILLE_BOMB);
+						g.drawAnimation(array.get(i).getExplosion().getAnimation()[8], array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_BOMB * 2 );
 					}
 				}
 			}
 		}
 	}
 	
-	private void checkExplode(float x, float y)
-	{
-		if(x >= 0 && y >= 0 && x < NB_CASE_LARGEUR * TAILLE_CASE && y < NB_CASE_HAUTEUR * TAILLE_CASE)
-		{
-			Case c = getCaseFromCoord(x, y);
-			if(c.getType() == "WALL")
-			{
-				c.setType("GROUND");
-			}
-		}
-	}
-
 	@Override
 	public int getID() {
 		// TODO Auto-generated method stub
 		return 1;
+	}
+	
+	private void canRemove(float x, float y)
+	{
+		Case c = getCaseFromCoord(x, y);
+		if(c.getType() == "WALL" && c != null)
+		{
+			plateau[c.getY()][c.getX()].setType("GROUND");;
+		}
 	}
 }

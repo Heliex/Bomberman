@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.SpriteSheet;
@@ -9,7 +9,7 @@ public class Player {
 	SpriteSheet sheet;
 	private Animation[] animations = new Animation[8];
 	float x, y;
-	private ArrayList<Bomb> bomb = new ArrayList<>();
+	private LinkedList<Bomb> bomb = new LinkedList<>();
 	
 	public Player(SpriteSheet sheet,int numColor,float x, float y)
 	{
@@ -78,7 +78,7 @@ public class Player {
 		this.numColor = numColor;
 	}
 	
-	public ArrayList<Bomb> getBombe()
+	public LinkedList<Bomb> getBombe()
 	{
 		return this.bomb;
 	}
