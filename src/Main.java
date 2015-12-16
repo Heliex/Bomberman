@@ -41,6 +41,7 @@ public class Main extends StateBasedGame{
 		// TODO Auto-generated method stub
 		this.addState(new Menu());
 		this.addState(new Game());
+		//this.addState(new Multiplayer());
 	}
 
 }

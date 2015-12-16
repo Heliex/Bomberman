@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.Random;
 
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
@@ -27,12 +28,13 @@ public class Game extends BasicGameState{
 	public final static int NB_BOMB_AT_START = 3;
 	public final static int NB_CASE_HAUTEUR = 19, NB_CASE_LARGEUR = 25;
 	public final static int OFFSET_VERTICAL_Y_LEFTORRIGHT = 29, OFFSET_HORIZONTAL_X_LEFTORRIGHT = 16;
-	public final static int TIME_TO_EXPLODE = 4000;
-	
+	public final static int TIME_TO_EXPLODE = 4000, TIME_TO_BONUS_APPEAR = 16000, TIME_BEFORE_DISSAPEAR = 25000;
+	public final static int NB_BONUS = 7;
 	// All static but modifiable variables.
 	
 	public static int NB_BOMB_AVAILABLE= 3,NB_BOMB_ON_BOARD = 0;
 	public static int NB_OBJECTIVE = 3;
+	public static float COEFF_DEPLACEMENT = 0.10f;
 	
 	// Other variables
 	private boolean isMoving = false;
@@ -40,7 +42,11 @@ public class Game extends BasicGameState{
 	private Player p ;
 	private Case[][] plateau;
 	private Image wall,ground,indestructible_wall,groundGrass;
-	private SpriteSheet sheet, bombSheet,explosionSheet;
+	private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet;
+	enum Stats{BOMB_ADD,SPEED_UP,CANSHOOTBOMB,BOXE,EXPLOSION_GROW,BOMB_EFFICIENT,BOMB_LESS_EFFICIENT};
+	private LinkedList<Bonus> bonus ;
+	private long tempsExecution = 0,tempsAuLancement = 0, tempsBonusAppear = 0;
+	private Random rand ;
 	//private static BombermanAudioPlayer audioPlayer;
 
 	public Game()
@@ -61,6 +67,9 @@ public class Game extends BasicGameState{
 		ground = new Image("images/Groundsecond.png");
 		groundGrass = new Image("images/Groundone.png");
 		indestructible_wall = new Image("images/Indestructible_wall.png");
+		bonusSheet = new SpriteSheet("images/Bonus.png",TAILLE_BOMB,TAILLE_BOMB);
+		rand = new Random();
+		tempsAuLancement = Bomb.getTime();
 		// Initialize Player
 		p = new Player(sheet,0,0,TAILLE_CASE);
 		// Initialize plateau
@@ -82,9 +91,41 @@ public class Game extends BasicGameState{
 		// Draw All Bombe And Explosion
 		drawArray(p.getBombe(),g);
 		drawExplosion(p.getBombe(),g);
+		drawBonus(bonus,g);
 		
 		// Draw Animation 
 		g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
+		if(tempsExecution - tempsAuLancement > TIME_TO_BONUS_APPEAR)
+		{
+			new Thread(new Runnable(){
+				public void run()
+				{
+					int index = rand.nextInt(NB_BONUS);
+					int x = rand.nextInt(NB_CASE_LARGEUR);
+					int y = rand.nextInt(NB_CASE_HAUTEUR);
+					Case c = plateau[y][x];
+					while(c.getType() == "WALL" || c.getType() == "INDESTRUCTIBLE" || c.getY() == 0)
+					{
+						x = rand.nextInt(NB_CASE_LARGEUR);
+						y = rand.nextInt(NB_CASE_HAUTEUR);
+						c = plateau[y][x];
+					}
+					
+					
+					rand = new Random();
+				}
+			}).start();
+			
+			tempsBonusAppear = Bomb.getTime();
+			tempsAuLancement = Bomb.getTime();
+		}
+		if(tempsExecution - tempsBonusAppear > TIME_BEFORE_DISSAPEAR)
+		{
+			// Remove All Bonus
+			if(bonus.size() > 0)
+			bonus.removeFirst();
+		}
+		tempsExecution = Bomb.getTime();
 	}
 	
 	// Check difference between last render and now
@@ -99,16 +140,16 @@ public class Game extends BasicGameState{
 				switch(direction)
 				{
 				case 0 :
-					p.setY(p.getY() - delta * .1f); 	
+					p.setY(p.getY() - delta * COEFF_DEPLACEMENT); 	
 				break;
 				case 1 : 
-					p.setX(p.getX() - delta * .1f); 
+					p.setX(p.getX() - delta * COEFF_DEPLACEMENT); 
 				break;
 				case 2 : 
-					p.setY(p.getY() + delta * .1f); 
+					p.setY(p.getY() + delta * COEFF_DEPLACEMENT); 
 				break;
 				case 3 : 
-					p.setX(p.getX() + delta * .1f); 
+					p.setX(p.getX() + delta * COEFF_DEPLACEMENT); 
 				break;
 				}
 			}
@@ -127,14 +168,13 @@ public class Game extends BasicGameState{
 		case Input.KEY_DOWN : this.direction = 2 ; this.isMoving = true; break;
 		case Input.KEY_RIGHT : this.direction = 3 ; this.isMoving = true; break;
 		case Input.KEY_B:
-			System.out.println(p.getBombe().size());
 			if(p.getBombe().size() < NB_BOMB_AVAILABLE)
 			{
 				new Thread(new Runnable(){
 					public void run()
 					{
 						Case c = getCaseFromCoord(p.getX()+TAILLE_CASE/2, p.getY()+TAILLE_CASE - (TAILLE_CASE/2));
-						if(c.getType() != "MUR" && c.getType() != "INDESTRUCTIBLE")
+						if(c.getType() != "WALL" && c.getType() != "INDESTRUCTIBLE")
 						{
 							Bomb b = new Bomb(bombSheet,c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,new Explosion(c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,explosionSheet));
 							p.getBombe().add(b);
@@ -166,9 +206,9 @@ public class Game extends BasicGameState{
 		{
 			case 0 : // UP
 				
-				if(p.getY() - delta * 0.1f > 0 )
+				if(p.getY() - delta * COEFF_DEPLACEMENT > TAILLE_CASE )
 				{
-					Rectangle rect = new Rectangle(p.getX(), p.getY() - delta*0.1f,OFFSET_HORIZONTAL_X_LEFTORRIGHT,OFFSET_VERTICAL_Y_LEFTORRIGHT);
+					Rectangle rect = new Rectangle(p.getX(), p.getY() - delta*COEFF_DEPLACEMENT,OFFSET_HORIZONTAL_X_LEFTORRIGHT,OFFSET_VERTICAL_Y_LEFTORRIGHT);
 					float[] points = rect.getPoints();
 					Case hautGauche = getCaseFromCoord(points[0], points[1]);
 					Case hautDroite = getCaseFromCoord(points[2], points[3]);
@@ -186,9 +226,9 @@ public class Game extends BasicGameState{
 			break;
 			
 			case 1 : // LEFT
-				if(p.getX() - delta * 0.1f > 0)
+				if(p.getX() - delta * COEFF_DEPLACEMENT > 0)
 				{
-					Rectangle rect = new Rectangle(p.getX() - delta*0.1f, p.getY(),OFFSET_HORIZONTAL_X_LEFTORRIGHT, OFFSET_VERTICAL_Y_LEFTORRIGHT);
+					Rectangle rect = new Rectangle(p.getX() - delta*COEFF_DEPLACEMENT, p.getY(),OFFSET_HORIZONTAL_X_LEFTORRIGHT, OFFSET_VERTICAL_Y_LEFTORRIGHT);
 					float[] points = rect.getPoints();
 					Case hautGauche = getCaseFromCoord(points[0], points[1]);
 					Case basGauche = getCaseFromCoord(points[6], points[7]);
@@ -207,9 +247,9 @@ public class Game extends BasicGameState{
 			break;
 			
 			case 2 : // DOWN
-				if(p.getY() + delta * 0.1f < Main.HEIGHT)
+				if(p.getY() + delta * COEFF_DEPLACEMENT < Main.HEIGHT)
 				{
-					Rectangle rect = new Rectangle(p.getX(),p.getY() + delta*0.1f,OFFSET_HORIZONTAL_X_LEFTORRIGHT,OFFSET_VERTICAL_Y_LEFTORRIGHT);
+					Rectangle rect = new Rectangle(p.getX(),p.getY() + delta*COEFF_DEPLACEMENT,OFFSET_HORIZONTAL_X_LEFTORRIGHT,OFFSET_VERTICAL_Y_LEFTORRIGHT);
 					float[] points = rect.getPoints();
 					Case basDroite = getCaseFromCoord(points[4], points[5]);
 					Case basGauche = getCaseFromCoord(points[6], points[7]);
@@ -226,9 +266,9 @@ public class Game extends BasicGameState{
 			break;
 			
 			case 3 : // RIGHT
-				if(p.getX() + delta*0.1f < Main.WIDTH)
+				if(p.getX() + delta*COEFF_DEPLACEMENT < Main.WIDTH)
 				{
-					Rectangle rect = new Rectangle(p.getX()+delta*0.1f,p.getY(),OFFSET_HORIZONTAL_X_LEFTORRIGHT,OFFSET_VERTICAL_Y_LEFTORRIGHT);
+					Rectangle rect = new Rectangle(p.getX()+delta*COEFF_DEPLACEMENT,p.getY(),OFFSET_HORIZONTAL_X_LEFTORRIGHT,OFFSET_VERTICAL_Y_LEFTORRIGHT);
 					float[] points = rect.getPoints();
 					Case hautDroite = getCaseFromCoord(points[2], points[3]);
 					Case basDroite = getCaseFromCoord(points[4], points[5]);
@@ -407,9 +447,23 @@ public class Game extends BasicGameState{
 	private void canRemove(float x, float y)
 	{
 		Case c = getCaseFromCoord(x, y);
-		if(c.getType() == "WALL" && c != null)
+		if(c != null && c.getType() == "WALL")
 		{
 			plateau[c.getY()][c.getX()].setType("GROUND");;
+		}
+	}
+	
+	private void drawBonus(LinkedList<Bonus> bonus , Graphics g)
+	{
+		for(int i = 0 ; i < bonus.size() ; i++)
+		{
+			if(bonus.get(i) != null)
+			{
+				if(bonus.get(i).getDrawable())
+				{
+					g.drawImage(bonus.get(i).getImage(), bonus.get(i).getX() * TAILLE_CASE + (TAILLE_CASE - TAILLE_BOMB)/2, bonus.get(i).getY() * TAILLE_CASE + (TAILLE_CASE - TAILLE_BOMB)/2);
+				}
+			}
 		}
 	}
 }
