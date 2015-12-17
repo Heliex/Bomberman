@@ -5,9 +5,10 @@ public class Bonus {
 	private Image image;
 	private boolean isDrawable;
 	private int x,y;
-	
+	private long timer;
 	public Bonus(String nom, Image image)
 	{
+		this.timer = Bomb.getTime();
 		this.nom = nom;
 		this.image = image;
 		this.x = 0;
@@ -68,5 +69,15 @@ public class Bonus {
 	public String toString()
 	{
 		return "X : " + x + " Y : " + y ;
+	}
+	
+	public long getTimer()
+	{
+		return this.timer;
+	}
+	
+	public void setTimer(long timer)
+	{
+		this.timer = timer;
 	}
 }

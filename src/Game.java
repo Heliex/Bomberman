@@ -28,7 +28,7 @@ public class Game extends BasicGameState{
 	public final static int NB_BOMB_AT_START = 3;
 	public final static int NB_CASE_HAUTEUR = 19, NB_CASE_LARGEUR = 25;
 	public final static int OFFSET_VERTICAL_Y_LEFTORRIGHT = 29, OFFSET_HORIZONTAL_X_LEFTORRIGHT = 16;
-	public final static int TIME_TO_EXPLODE = 4000, TIME_TO_BONUS_APPEAR = 16000, TIME_BEFORE_DISSAPEAR = 25000;
+	public final static int TIME_TO_EXPLODE = 4000, TIME_TO_BONUS_APPEAR = 20000, TIME_BEFORE_DISSAPEAR = 30000;
 	public final static int NB_BONUS = 7;
 	// All static but modifiable variables.
 	
@@ -43,9 +43,8 @@ public class Game extends BasicGameState{
 	private Case[][] plateau;
 	private Image wall,ground,indestructible_wall,groundGrass;
 	private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet;
-	enum Stats{BOMB_ADD,SPEED_UP,CANSHOOTBOMB,BOXE,EXPLOSION_GROW,BOMB_EFFICIENT,BOMB_LESS_EFFICIENT};
 	private LinkedList<Bonus> bonus ;
-	private long tempsExecution = 0,tempsAuLancement = 0, tempsBonusAppear = 0;
+	private long tempsExecution = 0,tempsAuLancement = 0;
 	private Random rand ;
 	//private static BombermanAudioPlayer audioPlayer;
 
@@ -74,6 +73,7 @@ public class Game extends BasicGameState{
 		p = new Player(sheet,0,0,TAILLE_CASE);
 		// Initialize plateau
 		plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
+		bonus = new LinkedList<Bonus>();
 		// Intialize level
 		File level = new File("niveaux/niveau1.txt");
 		initLevel(level);
@@ -92,7 +92,6 @@ public class Game extends BasicGameState{
 		drawArray(p.getBombe(),g);
 		drawExplosion(p.getBombe(),g);
 		drawBonus(bonus,g);
-		
 		// Draw Animation 
 		g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
 		if(tempsExecution - tempsAuLancement > TIME_TO_BONUS_APPEAR)
@@ -101,6 +100,32 @@ public class Game extends BasicGameState{
 				public void run()
 				{
 					int index = rand.nextInt(NB_BONUS);
+					switch(index)
+					{
+					case 0:
+						bonus.add(new Bonus("Bombe Supplémentaire",bonusSheet.getSprite(0, 0)));
+						break;
+					case 1:
+						bonus.add(new Bonus("Vitesse supérieur",bonusSheet.getSprite(1,0)));
+						break;
+					case 2:
+						bonus.add(new Bonus("Bombe déplacable",bonusSheet.getSprite(2, 0)));
+						break;
+					case 3:
+						bonus.add(new Bonus("Ganx de boxe",bonusSheet.getSprite(3,0)));
+						break;
+					case 4:
+						bonus.add(new Bonus("Explosion plus longue",bonusSheet.getSprite(4,0)));
+						break;
+					case 5:
+						bonus.add(new Bonus("Bombe plus efficiente",bonusSheet.getSprite(5, 0)));
+						break;
+					case 6:
+						bonus.add(new Bonus("Explosion diminuée",bonusSheet.getSprite(6, 0)));
+						break;
+					default:
+						break;
+					}
 					int x = rand.nextInt(NB_CASE_LARGEUR);
 					int y = rand.nextInt(NB_CASE_HAUTEUR);
 					Case c = plateau[y][x];
@@ -110,22 +135,23 @@ public class Game extends BasicGameState{
 						y = rand.nextInt(NB_CASE_HAUTEUR);
 						c = plateau[y][x];
 					}
+					if(bonus.size() > 0)
+					{
+						bonus.getLast().setDrawable(true);
+						bonus.getLast().setX(c.getX());
+						bonus.getLast().setY(c.getY());
+					}
 					
 					
 					rand = new Random();
 				}
 			}).start();
-			
-			tempsBonusAppear = Bomb.getTime();
 			tempsAuLancement = Bomb.getTime();
 		}
-		if(tempsExecution - tempsBonusAppear > TIME_BEFORE_DISSAPEAR)
-		{
-			// Remove All Bonus
-			if(bonus.size() > 0)
-			bonus.removeFirst();
-		}
 		tempsExecution = Bomb.getTime();
+		
+		// Check if bomberman walk on bonus
+		
 	}
 	
 	// Check difference between last render and now
@@ -187,7 +213,6 @@ public class Game extends BasicGameState{
 			System.exit(0);
 			break;
 		}
-		
 	}
 	
 	@Override
@@ -459,7 +484,12 @@ public class Game extends BasicGameState{
 		{
 			if(bonus.get(i) != null)
 			{
-				if(bonus.get(i).getDrawable())
+				if(tempsExecution - bonus.get(i).getTimer() > TIME_BEFORE_DISSAPEAR)
+				{
+					if(bonus.size() >0)
+					bonus.removeFirst();
+				}
+				else if(bonus.get(i).getDrawable())
 				{
 					g.drawImage(bonus.get(i).getImage(), bonus.get(i).getX() * TAILLE_CASE + (TAILLE_CASE - TAILLE_BOMB)/2, bonus.get(i).getY() * TAILLE_CASE + (TAILLE_CASE - TAILLE_BOMB)/2);
 				}
