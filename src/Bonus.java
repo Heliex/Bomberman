@@ -68,7 +68,7 @@ public class Bonus {
 	
 	public String toString()
 	{
-		return "X : " + x + " Y : " + y ;
+		return "X : " + x + " Y : " + y + " Nom : " + nom ;
 	}
 	
 	public long getTimer()
