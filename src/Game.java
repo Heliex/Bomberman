@@ -13,6 +13,7 @@ import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
+import org.newdawn.slick.Sound;
 import org.newdawn.slick.SpriteSheet;
 import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.state.BasicGameState;
@@ -51,6 +52,7 @@ public class Game extends BasicGameState{
 	private LinkedList<Bonus> bonus ;
 	private long tempsExecution = 0,tempsAuLancement = 0;
 	private Random rand ;
+	private Sound bonusSound,bombExplode,background;
 	//private static BombermanAudioPlayer audioPlayer;
 
 	public Game()
@@ -79,16 +81,21 @@ public class Game extends BasicGameState{
 		// Initialize plateau
 		plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
 		bonus = new LinkedList<Bonus>();
+		bonusSound = new Sound("sons/ramasserBonus.wav");
+		bombExplode = new Sound("sons/bombExplode.wav");
+		background = new Sound("sons/builtToFall.wav");
+		
 		// Intialize level
 		File level = new File("niveaux/niveau1.txt");
 		initLevel(level);
-		
+		background.play(); 
 	}
 	
 	// This method is called on some interval
 	@Override
 	public void render(GameContainer gc,StateBasedGame game, Graphics g) throws SlickException
 	{
+		
 		g.setBackground(new Color(255,255,255,.5f));
 		// Draw Board
 		drawBoard(g);
@@ -423,6 +430,7 @@ public class Game extends BasicGameState{
 			{
 				if (Bomb.getTime() - array.get(i).getFirstTime()  > TIME_TO_EXPLODE)
 				{
+					bombExplode.play();
 					array.get(i).setDrawable(false);
 					array.get(i).setFirstTime(Bomb.getTime());
 					if(array.get(i).getExplosion() != null)
@@ -522,6 +530,7 @@ public class Game extends BasicGameState{
 				bonus.get(i).setDrawable(false);
 				toCompare.setHasbonus(false);
 				plateau[toCompare.getY()][toCompare.getX()].setHasbonus(false);
+				bonusSound.play();
 				switch(bonus.get(i).getNom())
 				{
 					case BOMBADD:
