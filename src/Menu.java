@@ -50,7 +50,7 @@ public class Menu extends BasicGameState implements KeyListener{
 	    case Input.KEY_2:
 	    case Input.KEY_NUMPAD2:
 	        // TODO: Implement later
-	    	game.enterState(Main.GAME_MULTIPLAYER);
+	    	//game.enterState(Main.GAME_MULTIPLAYER);
 	        break;
 	    case Input.KEY_3:
 	        // TODO: Implement later
