@@ -15,7 +15,7 @@ public class Main extends StateBasedGame{
 	public static final int HEIGHT = Game.NB_CASE_HAUTEUR * Game.TAILLE_CASE;
 	public static final int FPS = 60;
 	public static double version = 1.0;
-	public static String titre = "Bomberman" + version;
+	public static String titre = "Bomberman - v" + version;
 	
 	public Main(String name) {
 		super(name);
@@ -41,7 +41,7 @@ public class Main extends StateBasedGame{
 		// TODO Auto-generated method stub
 		this.addState(new Menu());
 		this.addState(new Game());
-		//this.addState(new Multiplayer());
+		this.addState(new Multiplayer());
 	}
 
 }

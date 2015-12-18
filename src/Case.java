@@ -4,7 +4,7 @@ public class Case {
 	int x;
 	int y;
 	String type;
-	boolean hasBonus ;
+	boolean hasBonus;
 	public Case()
 	{
 		this.x = 0;

@@ -20,12 +20,13 @@ public class Menu extends BasicGameState implements KeyListener{
 	public void render(GameContainer arg0, StateBasedGame arg1, Graphics g) throws SlickException {
 		// TODO Auto-generated method stub
 		g.setColor(Color.white);
-		g.drawString("Bomberman", 50, 10);
+		g.drawString("Bomberman - Explode Everywhere", 50, 10);
 		g.drawString("1. Start/Load game", 50, 100);
-		g.drawString("2. Multiplayer game", 50, 120);
-		g.drawString("3. Options", 50, 140);
-		g.drawString("4. HighScores", 50, 160);
-		g.drawString("5. Exit", 50, 180);
+		g.drawString("2. Multiplayer game / Internet", 50, 120);
+		g.drawString("3. Multiplayer Game / Local", 50, 140);
+		g.drawString("3. Options", 50, 160);
+		g.drawString("4. HighScores", 50, 180);
+		g.drawString("5. Exit", 50, 200);
 	}
 
 	@Override
@@ -47,7 +48,9 @@ public class Menu extends BasicGameState implements KeyListener{
 	        game.enterState(Main.GAME_SOLO);
 	        break;
 	    case Input.KEY_2:
+	    case Input.KEY_NUMPAD2:
 	        // TODO: Implement later
+	    	game.enterState(Main.GAME_MULTIPLAYER);
 	        break;
 	    case Input.KEY_3:
 	        // TODO: Implement later

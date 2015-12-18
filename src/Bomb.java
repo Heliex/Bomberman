@@ -15,7 +15,7 @@ public class Bomb {
 	{
 		this.isDrawable = true;
 		this.explosion = explosion;
-		firstTime = getTime();
+		this.firstTime = getTime();
 		this.xBomb = x;
 		this.yBomb = y;
 		this.sheet = sheet;
