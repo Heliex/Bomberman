@@ -44,7 +44,7 @@ public class Game extends BasicGameState{
 	public static int TAILLE_EXPLOSION = 2;
 	
 	// Other variables
-	private boolean isMoving = false;
+	private boolean isMoving = false,isGameOver = false;
 	private int direction = 0;
 	private Player p ;
 	private Case[][] plateau;
@@ -478,24 +478,31 @@ public class Game extends BasicGameState{
 					}
 					else if(array.get(i).getExplosion().isDrawable())
 					{
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[0], array.get(i).getXBomb(),array.get(i).getYBomb());
 						
-						for(int j = 0 ; j < TAILLE_EXPLOSION ; j++)
+						if(isGameOver)
 						{
-							canRemove(array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_CASE*j);
-							canRemove(array.get(i).getXBomb()+ TAILLE_CASE*j,array.get(i).getYBomb());
-							canRemove(array.get(i).getXBomb(),array.get(i).getYBomb() - TAILLE_CASE*j);
-							canRemove(array.get(i).getXBomb() - TAILLE_CASE*j,array.get(i).getYBomb());
-							g.drawAnimation(array.get(i).getExplosion().getAnimation()[1], array.get(i).getXBomb() - TAILLE_BOMB*j, array.get(i).getYBomb());
-							g.drawAnimation(array.get(i).getExplosion().getAnimation()[3], array.get(i).getXBomb() + TAILLE_BOMB*j, array.get(i).getYBomb());
-							g.drawAnimation(array.get(i).getExplosion().getAnimation()[5], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_BOMB*j);
-							g.drawAnimation(array.get(i).getExplosion().getAnimation()[7], array.get(i).getXBomb(), array.get(i).getYBomb() + TAILLE_BOMB*j);
+							
 						}
-						
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[2], array.get(i).getXBomb() - TAILLE_BOMB * TAILLE_EXPLOSION, array.get(i).getYBomb());
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[4], array.get(i).getXBomb() + TAILLE_BOMB * TAILLE_EXPLOSION, array.get(i).getYBomb());
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[6], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_BOMB * TAILLE_EXPLOSION);
-						g.drawAnimation(array.get(i).getExplosion().getAnimation()[8], array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_BOMB * TAILLE_EXPLOSION );
+						else
+						{
+							for(int j = 0 ; j < TAILLE_EXPLOSION ; j++)
+							{
+								
+								canRemove(array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_CASE*j);
+								canRemove(array.get(i).getXBomb()+ TAILLE_CASE*j,array.get(i).getYBomb());
+								canRemove(array.get(i).getXBomb(),array.get(i).getYBomb() - TAILLE_CASE*j);
+								canRemove(array.get(i).getXBomb() - TAILLE_CASE*j,array.get(i).getYBomb());
+								g.drawAnimation(array.get(i).getExplosion().getAnimation()[1], array.get(i).getXBomb() - TAILLE_BOMB*j, array.get(i).getYBomb());
+								g.drawAnimation(array.get(i).getExplosion().getAnimation()[3], array.get(i).getXBomb() + TAILLE_BOMB*j, array.get(i).getYBomb());
+								g.drawAnimation(array.get(i).getExplosion().getAnimation()[5], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_BOMB*j);
+								g.drawAnimation(array.get(i).getExplosion().getAnimation()[7], array.get(i).getXBomb(), array.get(i).getYBomb() + TAILLE_BOMB*j);
+							}
+							g.drawAnimation(array.get(i).getExplosion().getAnimation()[0], array.get(i).getXBomb(),array.get(i).getYBomb());
+							g.drawAnimation(array.get(i).getExplosion().getAnimation()[2], array.get(i).getXBomb() - TAILLE_BOMB * TAILLE_EXPLOSION, array.get(i).getYBomb());
+							g.drawAnimation(array.get(i).getExplosion().getAnimation()[4], array.get(i).getXBomb() + TAILLE_BOMB * TAILLE_EXPLOSION, array.get(i).getYBomb());
+							g.drawAnimation(array.get(i).getExplosion().getAnimation()[6], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_BOMB * TAILLE_EXPLOSION);
+							g.drawAnimation(array.get(i).getExplosion().getAnimation()[8], array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_BOMB * TAILLE_EXPLOSION );
+						}	
 					}
 				}
 			}
