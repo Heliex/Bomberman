@@ -4,12 +4,13 @@ public class Case {
 	int x;
 	int y;
 	String type;
-	boolean hasBonus;
+	boolean hasBonus,hasBombe;
 	public Case()
 	{
 		this.x = 0;
 		this.y = 0;
 		this.hasBonus = false;
+		this.hasBombe = false;
 	}
 	
 	public Case(int x , int y,String type)
@@ -52,7 +53,7 @@ public class Case {
 	
 	public String toString()
 	{
-		return "X : " + this.getX() + " Y :" + this.getY() + " Type de la case : " + this.getType() + " BONUS ? : " + this.hasBonus();
+		return "X : " + this.getX() + " Y :" + this.getY() + " Type de la case : " + this.getType() + " BONUS ? : " + this.hasBonus() + " Bombe posée ? : " + this.hasBombe();
 	}
 	
 	public float getRealX()
@@ -75,6 +76,15 @@ public class Case {
 		this.hasBonus = hasBonus;
 	}
 	
+	public boolean hasBombe()
+	{
+		return this.hasBombe;
+	}
+	
+	public void setHasBombe(boolean hasBombe)
+	{
+		this.hasBombe = hasBombe;
+	}
 	public boolean equals(Case c2)
 	{
 		return (this.x == c2.getX() && this.y == c2.getY()) ? true : false;

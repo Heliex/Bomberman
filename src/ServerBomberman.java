@@ -1,6 +1,7 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -18,12 +19,11 @@ public class ServerBomberman implements ActionListener{
 	private static int NB_CLIENTS_MAX = 4;
 	private static int NB_CLIENTS_CONNECTES = 0;
 	private static Socket[] clients = new Socket[NB_CLIENTS_MAX];
+
 	public static void main(String[] args)
 	{
 		// Set the server
-		new ServerBomberman();
-				
-		
+		new ServerBomberman();	
 	}
 	
 	public ServerBomberman()
@@ -49,13 +49,22 @@ public class ServerBomberman implements ActionListener{
 					
 	}
 	
-	public static void serveurGo() throws IOException
+	public static void serveurGo()
 	{
 		while(!server.isClosed())
 		{
-			clients[NB_CLIENTS_CONNECTES] = server.accept();
-			
+			try
+			{
+				clients[NB_CLIENTS_CONNECTES] = server.accept();
+				NB_CLIENTS_CONNECTES++;
+
+			}
+			catch(IOException io)
+			{
+				io.printStackTrace();
+			}
 		}
+		
 		System.out.println("Le serveur va se fermer");
 	}
 
@@ -96,6 +105,20 @@ public class ServerBomberman implements ActionListener{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
+		}
+	}
+	
+	public static void sendToAllClient(String message) throws IOException
+	{
+		OutputStream stream ;
+		for(int i = 0 ; i < clients.length; i++)
+		{
+			Socket socket = clients[i];
+			stream = socket.getOutputStream();
+			byte[] b = message.getBytes();
+			stream.write(b);
+			stream.flush();
+			
 		}
 	}
 }

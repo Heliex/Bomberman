@@ -22,23 +22,26 @@ import org.newdawn.slick.state.StateBasedGame;
 
 public class Game extends BasicGameState{
 	
-	// All static and no changing variables.
+	// All CONSTANT
 	public final static int UP = 0, LEFT = 1, DOWN = 2, RIGHT = 3;
 	public final static int LARGEUR_SPRITE = 18, HAUTEUR_SPRITE = 32;
 	public final static int TAILLE_BOMB = 16;
 	public final static int TAILLE_CASE = 32;
-	public final static int NB_BOMB_AT_START = 3,NB_BOMB_MAXI = 5;
+	public final static int NB_BOMB_AT_START = 1,NB_BOMB_MAXI = 5;
 	public final static int NB_CASE_HAUTEUR = 19, NB_CASE_LARGEUR = 25;
 	public final static int OFFSET_VERTICAL_Y_LEFTORRIGHT = 29, OFFSET_HORIZONTAL_X_LEFTORRIGHT = 16;
-	public final static int TIME_TO_EXPLODE = 4000, TIME_TO_BONUS_APPEAR = 10000, TIME_BEFORE_DISSAPEAR = 30000;
-	public final static int NB_BONUS = 7,TAILLE_MORT_LARGEUR = 17, TAILLE_MORT_HAUTEUR = 24;
+	public final static int TIME_TO_EXPLODE = 4000, TIME_TO_BONUS_APPEAR = 10000, TIME_BEFORE_DISSAPEAR = 30000, TIME_BETWEEN_BOMB_MOVEMENT = 10;
+	public final static int NB_BONUS = 14,TAILLE_MORT_LARGEUR = 17, TAILLE_MORT_HAUTEUR = 24,TAILLE_EXPLODE_MIN = 2;
 	public final static String BOMBADD = "Bombe Supplémentaire",SPEEDUP="Vitesse supérieur",MOVEBOMB="Bombe déplacable";
-	public final static String BOXE = "Ganx de boxe",EXPLODEMORE="Explosion plus longue", GROWDMG="Bombe plus efficiente",EXPLODELESS="Explosion diminuée";
-	public final static String WALL = "WALL",GROUND= "GROUND", GRASSGROUND = "GRASSGROUND",INDESTRUCTIBLE ="INDESTRUCTIBLE";
-	public final static float COEFF_MAX = 0.25f,EXPLOSION_MAX = 4;
-	// All static but modifiable variables.
+	public final static String BOXE = "Gant de boxe",EXPLODEMORE="Explosion plus longue", GROWDMG="Bombe plus efficiente",EXPLODELESS="Explosion diminuée";
+	public final static String BOMBLESS = "Bombe en moins", SPEEDLESS = "Vitesse inférieure", STOPBOMB = "Bombe non déplaçable";
+	public final static String UNBOXE = "Fin du bonus de boxe", LOWDMG = "Bombe moins efficiente", EXPLODELESSEFFICIENT = "Explosion efficiente";
 	
-	public static int NB_BOMB_AVAILABLE= 3,NB_BOMB_ON_BOARD = 0;
+	public final static String WALL = "WALL",GROUND= "GROUND", GRASSGROUND = "GRASSGROUND",INDESTRUCTIBLE ="INDESTRUCTIBLE";
+	public final static float COEFF_MAX = 0.25f,EXPLOSION_MAX = 4, COEFF_MIN = 0.10f;
+	
+	// All static but modifiable variables
+	public static int NB_BOMB_AVAILABLE= 1,NB_BOMB_ON_BOARD = 0;
 	public static int NB_OBJECTIVE = 3;
 	public static float COEFF_DEPLACEMENT = 0.10f;
 	public static int TAILLE_EXPLOSION = 2;
@@ -54,7 +57,6 @@ public class Game extends BasicGameState{
 	private long tempsExecution = 0,tempsAuLancement = 0;
 	private Random rand ;
 	private Sound bonusSound,bombExplode,background;
-
 	// This is method is called when windows is opening
 	@Override
 	public void init(GameContainer gc,StateBasedGame game) throws SlickException
@@ -99,6 +101,7 @@ public class Game extends BasicGameState{
 			background.play();
 			gc.setMusicVolume(5);
 		}
+		
 		g.setBackground(new Color(255,255,255,.5f));
 		// Draw Board
 		drawBoard(g);
@@ -107,25 +110,37 @@ public class Game extends BasicGameState{
 		drawExplosion(p.getBombe(),g);
 		drawBonus(bonus,g);
 		// Draw Animation 
-		g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
-        if(p.isDeadDrawable())
-        {
-        	g.drawAnimation(p.getDead(), 300, 300);
-        }
+		
 		checkBonus(p);
 		tempsExecution = Bomb.getTime();
 		// Check if bomberman walk on bonus
-		
+		if(p.isDeadDrawable())
+		{
+			g.drawAnimation(p.getDead(), p.getX(), p.getY());
+			if(p.getDead().getFrame() == 3)
+			{
+				NB_BOMB_AVAILABLE = NB_BOMB_AT_START;
+				COEFF_DEPLACEMENT = COEFF_MIN;
+				TAILLE_EXPLOSION = TAILLE_EXPLODE_MIN;
+				init(gc, game);
+			}
+			
+		}
+		else
+		{
+			g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
+		}
 	}
 	
 	// Game logic
 	@Override
 	public void update(GameContainer gc,StateBasedGame game, int delta) throws SlickException
 	{
-		if(p.getDead().getFrame() == 3)
-    	{
-    		p.setIsDeadDrawable(false);
-    	}
+		if(p.isInExplosion())
+		{
+			p.setIsDeadDrawable(true);
+		}
+		// Add random bonus on map at every interval
 		if(tempsExecution - tempsAuLancement > TIME_TO_BONUS_APPEAR)
 		{
 			new Thread(new Runnable(){
@@ -147,6 +162,7 @@ public class Game extends BasicGameState{
 						bonus.add(new Bonus(BOXE,bonusSheet.getSprite(3,0)));
 						break;
 					case 4:
+					case 13:
 						bonus.add(new Bonus(EXPLODEMORE,bonusSheet.getSprite(4,0)));
 						break;
 					case 5:
@@ -154,6 +170,24 @@ public class Game extends BasicGameState{
 						break;
 					case 6:
 						bonus.add(new Bonus(EXPLODELESS,bonusSheet.getSprite(6, 0)));
+						break;
+					case 7:
+						bonus.add(new Bonus(BOMBLESS,bonusSheet.getSprite(0, 1)));
+						break;
+					case 8:
+						bonus.add(new Bonus(SPEEDLESS,bonusSheet.getSprite(1, 1)));
+						break;
+					case 9:
+						bonus.add(new Bonus(STOPBOMB,bonusSheet.getSprite(2, 1)));
+						break;
+					case 10:
+						bonus.add(new Bonus(UNBOXE,bonusSheet.getSprite(3, 1)));
+						break;
+					case 11:
+						bonus.add(new Bonus(EXPLODELESSEFFICIENT,bonusSheet.getSprite(4, 1)));
+						break;
+					case 12:
+						bonus.add(new Bonus(LOWDMG,bonusSheet.getSprite(5, 1)));
 						break;
 					default:
 						break;
@@ -207,15 +241,33 @@ public class Game extends BasicGameState{
 			
 	}
 	
+	// Catch key pressed events
 	@Override
 	public void keyPressed(int key, char c)
 	{
 		switch(key)
 		{
-		case Input.KEY_UP : this.direction = UP ; this.isMoving = true; break;
-		case Input.KEY_LEFT : this.direction = LEFT ; this.isMoving = true; break;
-		case Input.KEY_DOWN : this.direction = DOWN ; this.isMoving = true; break;
-		case Input.KEY_RIGHT : this.direction = RIGHT ; this.isMoving = true; break;
+		case Input.KEY_UP :
+		case Input.KEY_Z :
+			this.direction = UP ; 
+			this.isMoving = true; 
+			break;
+		case Input.KEY_LEFT :
+		case Input.KEY_Q:
+			this.direction = LEFT ; 
+			this.isMoving = true; 
+			break;
+		case Input.KEY_DOWN : 
+		case Input.KEY_S:
+			this.direction = DOWN ; 
+			this.isMoving = true; 
+			break;
+		case Input.KEY_RIGHT :
+		case Input.KEY_D:
+			this.direction = RIGHT ; 
+			this.isMoving = true; 
+			break;
+			
 		case Input.KEY_B:
 			if(p.getBombe().size() < NB_BOMB_AVAILABLE)
 			{
@@ -223,8 +275,9 @@ public class Game extends BasicGameState{
 					public void run()
 					{
 						Case c = getCaseFromCoord(p.getX()+TAILLE_CASE/2, p.getY()+TAILLE_CASE - (TAILLE_CASE/2));
-						if(c.getType() != "WALL" && c.getType() != "INDESTRUCTIBLE")
+						if(c.getType() != "WALL" && c.getType() != "INDESTRUCTIBLE" && !c.hasBombe())
 						{
+							plateau[c.getY()][c.getX()].setHasBombe(true);
 							Bomb b = new Bomb(bombSheet,c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,new Explosion(c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,explosionSheet));
 							p.getBombe().add(b);
 						}
@@ -236,11 +289,98 @@ public class Game extends BasicGameState{
 			System.exit(0);
 			break;
 		case Input.KEY_X:
-			p.setIsDeadDrawable(true);
-			if(p.canMoveBomb())
-			{
-				
-			}
+		    if(p.isOnBomb() && p.canMoveBomb())
+		    {
+		    	Bomb bomb = p.getBombFromCoord(p.getX(), p.getY());
+		    	switch(direction)
+		    	{
+			    	case UP:
+			    		new Thread(){
+			    			public void run()
+			    			{
+			    				long timerDeplacementDepart = Bomb.getTime();
+			    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+			    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getYBomb()-1 > 0 && bomb.isDrawable())
+					    		{
+			    					long timerDeplacementCourant = Bomb.getTime();
+					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
+					    			{
+					    				bomb.setYBomb(bomb.getYBomb()-1);
+						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+						    			timerDeplacementDepart = Bomb.getTime();
+						    			courante.setHasBombe(false);
+					    			}
+					    			
+					    		}
+			    			}
+			    		}.start();
+			    		
+			    		break;
+			    	case LEFT:
+			    		new Thread(){
+			    			public void run()
+			    			{
+			    				long timerDeplacementDepart = Bomb.getTime();
+			    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+			    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getXBomb()-1 > 0 && bomb.isDrawable())
+					    		{
+					    			long timerDeplacementCourant = Bomb.getTime();
+					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
+					    			{
+					    				bomb.setXBomb(bomb.getXBomb()-1);
+						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+						    			timerDeplacementDepart = Bomb.getTime();
+						    			courante.setHasBombe(false);
+					    			}
+					    			
+					    		}
+			    			}
+			    		}.start();
+			    		break;
+			    	case DOWN:
+			    		new Thread(){
+			    			public void run()
+			    			{
+			    				long timerDeplacementDepart = Bomb.getTime();
+			    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+			    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getYBomb()+TAILLE_BOMB < Main.HEIGHT && getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb() + TAILLE_BOMB).getType() != "WALL" && bomb.getYBomb()+TAILLE_BOMB < Main.HEIGHT && getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb() + TAILLE_BOMB).getType() != "INDESTRUCTIBLE" && bomb.isDrawable())
+					    		{
+					    			long timerDeplacementCourant = Bomb.getTime();
+					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
+					    			{
+					    				bomb.setYBomb(bomb.getYBomb()+1);
+						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+						    			timerDeplacementDepart = Bomb.getTime();
+						    			courante.setHasBombe(false);
+					    			}
+					    			
+					    		}
+			    			}
+			    		}.start();
+			    		break;
+			    	case RIGHT:
+			    		new Thread(){
+			    			public void run()
+			    			{
+			    				long timerDeplacementDepart = Bomb.getTime();
+			    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+			    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getXBomb() + TAILLE_BOMB < Main.WIDTH && getCaseFromCoord(bomb.getXBomb() + TAILLE_BOMB, bomb.getYBomb()).getType() != "WALL" && getCaseFromCoord(bomb.getXBomb() + TAILLE_BOMB, bomb.getYBomb()).getType() != "INDESTRUCTIBLE" && bomb.isDrawable())
+					    		{
+					    			long timerDeplacementCourant = Bomb.getTime();
+					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
+					    			{
+					    				bomb.setXBomb(bomb.getXBomb()+1);
+						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+						    			timerDeplacementDepart = Bomb.getTime();
+						    			courante.setHasBombe(false);
+					    			}
+					    			
+					    		}
+			    			}
+			    		}.start();
+			    		break;
+		    	}
+		    }
 			break;
 		}
 	}
@@ -255,12 +395,11 @@ public class Game extends BasicGameState{
 	// Detect collision
 	public boolean canMove(Player p,int direction,int delta)
 	{
-		// For collision i did make 4 squares, represent each edges of sprites to Bomberman.
 		boolean canMove = false;
 		switch(direction)
 		{
+		// For each , i create a square and then i test than edge are not on wall or indestructible wall
 			case UP : // UP
-				
 				if(p.getY() - delta * COEFF_DEPLACEMENT > TAILLE_CASE )
 				{
 					Rectangle rect = new Rectangle(p.getX(), p.getY() - delta*COEFF_DEPLACEMENT,OFFSET_HORIZONTAL_X_LEFTORRIGHT,OFFSET_VERTICAL_Y_LEFTORRIGHT);
@@ -348,22 +487,7 @@ public class Game extends BasicGameState{
 	}
 	
 	
-	// I get the case from x and y coord
-	public Case getCaseFromCoord(float x, float y)
-	{
-		for(int i = 0 ; i < NB_CASE_HAUTEUR ; i++)
-		{
-			for(int j = 0 ; j < NB_CASE_LARGEUR ; j++)
-			{
-				Case c = plateau[i][j];
-				if(x > c.getRealX() && x <= c.getRealX() + TAILLE_CASE && y > c.getRealY() && y <= c.getRealY() + TAILLE_CASE)
-				{
-					return c;
-				}
-			}
-		}
-		return null;
-	}
+	
 	
 	
 	private void initLevel(File f)
@@ -438,7 +562,7 @@ public class Game extends BasicGameState{
 		}
 	}
 	
-	// Method for droing the bombArray on graphics
+	// Draw bomb
 	private void drawArray(LinkedList<Bomb> array,Graphics g)
 	{
 		for(int i = 0 ; i < array.size(); i++)
@@ -448,6 +572,8 @@ public class Game extends BasicGameState{
 				if (Bomb.getTime() - array.get(i).getFirstTime()  > TIME_TO_EXPLODE)
 				{
 					bombExplode.play();
+					Case c = getCaseFromCoord(array.get(i).getXBomb(),array.get(i).getYBomb());
+					plateau[c.getY()][c.getX()].setHasBombe(false);
 					array.get(i).setDrawable(false);
 					array.get(i).setFirstTime(Bomb.getTime());
 					if(array.get(i).getExplosion() != null)
@@ -464,6 +590,7 @@ public class Game extends BasicGameState{
 		}
 	}
 	
+	// Draw explosion
 	private void drawExplosion(LinkedList<Bomb> array,Graphics g)
 	{
 		for(int i = 0 ; i< array.size(); i++)
@@ -515,6 +642,7 @@ public class Game extends BasicGameState{
 		return 1;
 	}
 	
+	// Can remove wall ( when a bomb explode)
 	private void canRemove(float x, float y)
 	{
 		Case c = getCaseFromCoord(x, y);
@@ -524,6 +652,7 @@ public class Game extends BasicGameState{
 		}
 	}
 	
+	// Drawing bonus
 	private void drawBonus(LinkedList<Bonus> bonus , Graphics g)
 	{
 		for(int i = 0 ; i < bonus.size() ; i++)
@@ -546,6 +675,7 @@ public class Game extends BasicGameState{
 		}
 	}
 	
+	// Check if a bonus is where the player moves
 	private void checkBonus(Player p)
 	{
 		Case c = getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL_X_LEFTORRIGHT/2, p.getY() + OFFSET_VERTICAL_Y_LEFTORRIGHT/2);
@@ -565,16 +695,32 @@ public class Game extends BasicGameState{
 						NB_BOMB_AVAILABLE++;
 					break;
 					
+					case BOMBLESS:
+						if(NB_BOMB_AVAILABLE > NB_BOMB_AT_START)
+							NB_BOMB_AVAILABLE--;
+						break;
 					case SPEEDUP:
 						if(COEFF_DEPLACEMENT < COEFF_MAX)
 						COEFF_DEPLACEMENT+= 0.05f;
 					break;
+					
+					case SPEEDLESS:
+						if(COEFF_DEPLACEMENT > COEFF_MIN)
+							COEFF_DEPLACEMENT-=0.05f;
+						break;
 						
 					case MOVEBOMB:
 						p.setMoveBomb(true);
 					break;
 					
+					case STOPBOMB:
+						p.setMoveBomb(false);
+					break;
+					
 					case BOXE:
+					break;
+					
+					case UNBOXE:
 					break;
 					
 					case EXPLODEMORE:
@@ -586,16 +732,40 @@ public class Game extends BasicGameState{
 					break;
 					
 					case EXPLODELESS:
+						if(TAILLE_EXPLOSION > TAILLE_EXPLODE_MIN)
+							TAILLE_EXPLOSION--;
+					break;
+					
+					case EXPLODELESSEFFICIENT:
+						TAILLE_EXPLOSION = TAILLE_EXPLODE_MIN;
 					break;
 				}
 			}
 		}
 	}
 	
+	// Get case from indice
 	public Case getCaseFromIndice(int x,int y)
 	{
 		if(x >= 0 && x < NB_CASE_LARGEUR && y >=0 && y < NB_CASE_HAUTEUR)
 			return plateau[y][x];
 		return null;
 	}
+	
+	// I get the case from x and y coord
+		public Case getCaseFromCoord(float x, float y)
+		{
+			for(int i = 0 ; i < NB_CASE_HAUTEUR ; i++)
+			{
+				for(int j = 0 ; j < NB_CASE_LARGEUR ; j++)
+				{
+					Case c = plateau[i][j];
+					if(x > c.getRealX() && x <= c.getRealX() + TAILLE_CASE && y > c.getRealY() && y <= c.getRealY() + TAILLE_CASE)
+					{
+						return c;
+					}
+				}
+			}
+			return null;
+		}
 }

@@ -122,4 +122,52 @@ public class Player {
 	{
 		this.mortAnim = anim;
 	}
+	
+	public boolean isOnBomb()
+	{
+		for(int i = 0 ; i < bomb.size() ; i++)
+		{
+			if(bomb.get(i) != null)
+			{
+				if(x + Game.TAILLE_CASE/2>= bomb.get(i).getXBomb() && x+ Game.TAILLE_CASE/2 <= bomb.get(i).getXBomb() + Game.TAILLE_CASE && y+ Game.TAILLE_CASE/2 >= bomb.get(i).getYBomb() && y+ Game.TAILLE_CASE/2 <= bomb.get(i).getYBomb() + Game.TAILLE_CASE)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public Bomb getBombFromCoord(float x, float y)
+	{
+		for(int i = 0 ; i < bomb.size() ; i++)
+		{
+			if(bomb.get(i) != null)
+			{
+				if(x + Game.TAILLE_CASE/2>= bomb.get(i).getXBomb() && x+ Game.TAILLE_CASE/2 <= bomb.get(i).getXBomb() + Game.TAILLE_CASE && y+ Game.TAILLE_CASE/2 >= bomb.get(i).getYBomb() && y+ Game.TAILLE_CASE/2 <= bomb.get(i).getYBomb() + Game.TAILLE_CASE)
+				{
+					return bomb.get(i);
+				}
+			}
+		}
+		return null;
+	}
+	
+	public boolean isInExplosion()
+	{
+		for(Bomb b : bomb)
+		{
+			if(b != null)
+			{
+				Explosion e = b.getExplosion();
+				if(e != null && e.isDrawable())
+				{
+					
+					
+					
+ 				}
+			}
+		}
+		return false;
+	}
 }

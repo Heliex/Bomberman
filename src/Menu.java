@@ -22,10 +22,10 @@ public class Menu extends BasicGameState implements KeyListener{
 		g.setColor(Color.white);
 		g.drawString("Bomberman - Explode Everywhere", 50, 10);
 		g.drawString("1. Start/Load game", 50, 100);
-		g.drawString("2. Multiplayer game / Internet", 50, 120);
+		g.drawString("2. Multiplayer Game / Internet", 50, 120);
 		g.drawString("3. Multiplayer Game / Local", 50, 140);
 		g.drawString("3. Options", 50, 160);
-		g.drawString("4. HighScores", 50, 180);
+		g.drawString("4. Rules", 50, 180);
 		g.drawString("5. Exit", 50, 200);
 	}
 
@@ -50,11 +50,20 @@ public class Menu extends BasicGameState implements KeyListener{
 	    case Input.KEY_2:
 	    case Input.KEY_NUMPAD2:
 	        // TODO: Implement later
-	    	//game.enterState(Main.GAME_MULTIPLAYER);
+	    	game.enterState(Main.GAME_MULTIPLAYER);
 	        break;
 	    case Input.KEY_3:
+	    case Input.KEY_NUMPAD3:
 	        // TODO: Implement later
 	        break;
+	        
+	    case Input.KEY_4:
+	    case Input.KEY_NUMPAD4:
+	    	break;
+	    
+	    case Input.KEY_5:
+	    case Input.KEY_NUMPAD5:
+	    	System.exit(0);
 	    default:
 	        break;
 	    }
