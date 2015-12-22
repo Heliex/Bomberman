@@ -2,6 +2,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.Socket;
 
 import javax.swing.JButton;
@@ -37,6 +38,7 @@ public class Multiplayer extends BasicGameState implements ActionListener{
 		// TODO Auto-generated method stub
 		if(client == null)
 		{
+			new ServerBomberman();
 			JFrame frame = new JFrame("Configuration de la connexion au serveur");
 			JPanel panel = new JPanel();
 			JLabel hostLabel = new JLabel("Adresse IP/ Nom du serveur");	
@@ -107,6 +109,10 @@ public class Multiplayer extends BasicGameState implements ActionListener{
 				host = hostField.getText();
 				port = Integer.parseInt(portField.getText());
 				client = new Socket(host,port);
+			}
+			catch(ConnectException co)
+			{
+				co.printStackTrace();
 			}
 			catch(IOException io)
 			{

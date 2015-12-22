@@ -23,44 +23,49 @@ import org.newdawn.slick.state.StateBasedGame;
 public class Game extends BasicGameState{
 	
 	// All CONSTANT
-	public final static int UP = 0, LEFT = 1, DOWN = 2, RIGHT = 3;
-	public final static int LARGEUR_SPRITE = 18, HAUTEUR_SPRITE = 32;
+	public final static int UP = 0, LEFT = 1, DOWN = 2, RIGHT = 3, LEVEL_AT_START=1,LIFE_AT_START = 5;
+	public final static int LARGEUR_SPRITE = 18, HAUTEUR_SPRITE = 32,LARGEUR_NUMBER=8,HAUTEUR_NUMBER=14;
 	public final static int TAILLE_BOMB = 16;
 	public final static int TAILLE_CASE = 32;
 	public final static int NB_BOMB_AT_START = 1,NB_BOMB_MAXI = 5;
-	public final static int NB_CASE_HAUTEUR = 19, NB_CASE_LARGEUR = 25;
+	public final static int NB_CASE_HAUTEUR = 19, NB_CASE_LARGEUR = 25,TIMEGAME=121000;
 	public final static int OFFSET_VERTICAL_Y_LEFTORRIGHT = 29, OFFSET_HORIZONTAL_X_LEFTORRIGHT = 16;
-	public final static int TIME_TO_EXPLODE = 4000, TIME_TO_BONUS_APPEAR = 10000, TIME_BEFORE_DISSAPEAR = 30000, TIME_BETWEEN_BOMB_MOVEMENT = 10;
+	public final static int TIMER=1000,TIME_TO_EXPLODE = 4000, TIME_TO_BONUS_APPEAR = 10000, TIME_BEFORE_DISSAPEAR = 30000, TIME_BETWEEN_BOMB_MOVEMENT = 10;
 	public final static int NB_BONUS = 14,TAILLE_MORT_LARGEUR = 17, TAILLE_MORT_HAUTEUR = 24,TAILLE_EXPLODE_MIN = 2;
 	public final static String BOMBADD = "Bombe Supplémentaire",SPEEDUP="Vitesse supérieur",MOVEBOMB="Bombe déplacable";
-	public final static String BOXE = "Gant de boxe",EXPLODEMORE="Explosion plus longue", GROWDMG="Bombe plus efficiente",EXPLODELESS="Explosion diminuée";
+	public final static String BOXE = "Gant de boxe",EXPLODEMORE="Explosion plus longue", DEAD="Bombe plus efficiente",EXPLODELESS="Explosion diminuée";
 	public final static String BOMBLESS = "Bombe en moins", SPEEDLESS = "Vitesse inférieure", STOPBOMB = "Bombe non déplaçable";
 	public final static String UNBOXE = "Fin du bonus de boxe", LOWDMG = "Bombe moins efficiente", EXPLODELESSEFFICIENT = "Explosion efficiente";
-	
-	public final static String WALL = "WALL",GROUND= "GROUND", GRASSGROUND = "GRASSGROUND",INDESTRUCTIBLE ="INDESTRUCTIBLE";
+	public final static String LEVEL = "niveau";
+	public final static String WALL = "WALL",GROUND= "GROUND", GRASSGROUND = "GRASSGROUND",INDESTRUCTIBLE ="INDESTRUCTIBLE",
+			HOUSE = "HOUSE", WOOD = "WOOD", GROUNDGRASSTEXAS="GROUNDGRASSTEXAS", GROUNDTEXAS="GROUNDTEXAS", EMPTY = "EMPTY" ;
 	public final static float COEFF_MAX = 0.25f,EXPLOSION_MAX = 4, COEFF_MIN = 0.10f;
 	
 	// All static but modifiable variables
-	public static int NB_BOMB_AVAILABLE= 1,NB_BOMB_ON_BOARD = 0;
+	public static int NB_BOMB_AVAILABLE= 1,NB_BOMB_ON_BOARD = 0,LEVEL_START=1,LIFE_AVAILABLE=5;
 	public static int NB_OBJECTIVE = 3;
 	public static float COEFF_DEPLACEMENT = 0.10f;
 	public static int TAILLE_EXPLOSION = 2;
+	public static int CURRENT_TIME,s,min;
 	
 	// Other variables
-	private boolean isMoving = false,isGameOver = false;
+	private boolean isMoving = false,isGameOver = false ;
+	private boolean isLevelFinished;
 	private int direction = 0;
 	private Player p ;
 	private Case[][] plateau;
-	private Image wall,ground,indestructible_wall,groundGrass;
-	private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet;
+	private Image wall,ground,indestructible_wall,groundGrass, house, wood, groundGrassTexas,groundTexas,hud,timer;
+	private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet,numbers;
+	private Image[] compteur = new Image[10];
 	private LinkedList<Bonus> bonus ;
-	private long tempsExecution = 0,tempsAuLancement = 0;
+	private long tempsExecution = 0,tempsAuLancement = 0,timerStart=0;
 	private Random rand ;
 	private Sound bonusSound,bombExplode,background;
 	// This is method is called when windows is opening
 	@Override
 	public void init(GameContainer gc,StateBasedGame game) throws SlickException
 	{
+		isLevelFinished = false;
 		// Initialize SpriteSheet
 		sheet = new SpriteSheet("images/Deplacements.png",LARGEUR_SPRITE,HAUTEUR_SPRITE);
 		bombSheet = new SpriteSheet("images/Bombe.png",TAILLE_BOMB,TAILLE_BOMB);
@@ -68,12 +73,30 @@ public class Game extends BasicGameState{
 		deadSheet = new SpriteSheet("images/Mort.png",TAILLE_MORT_LARGEUR,TAILLE_MORT_HAUTEUR);
 		groundSheet = new SpriteSheet("images/Grounds.png",TAILLE_CASE,TAILLE_CASE);
 		bonusSheet = new SpriteSheet("images/Bonus.png",TAILLE_BOMB,TAILLE_BOMB);
+		numbers = new SpriteSheet("images/Number.png",LARGEUR_NUMBER,HAUTEUR_NUMBER);
+		hud = new Image("images/HUD.png");
 		// Initialize Images
 		groundGrass = groundSheet.getSprite(0,0);
 		ground = groundSheet.getSprite(1,0);
 		indestructible_wall = groundSheet.getSprite(2,0);
 		wall = groundSheet.getSprite(3,0);
+		house = groundSheet.getSprite(0,1);
+		wood = groundSheet.getSprite(1, 1);
+		groundGrassTexas = groundSheet.getSprite(2, 1);
+		groundTexas = groundSheet.getSprite(3, 1);
 		
+		hud = hud.getSubImage(0, 0, TAILLE_CASE*4 - TAILLE_BOMB, TAILLE_CASE);
+		timer = hud.getSubImage(4*TAILLE_CASE - TAILLE_BOMB, 0,TAILLE_CASE, TAILLE_CASE);
+		compteur[0] = numbers.getSprite(0, 0);
+		compteur[1] = numbers.getSprite(1, 0);
+		compteur[2] = numbers.getSprite(2, 0);
+		compteur[3] = numbers.getSprite(3, 0);
+		compteur[4] = numbers.getSprite(4, 0);
+		compteur[5] = numbers.getSprite(5, 0);
+		compteur[6] = numbers.getSprite(6, 0);
+		compteur[7] = numbers.getSprite(7, 0);
+		compteur[8] = numbers.getSprite(8, 0);
+		compteur[9] = numbers.getSprite(9, 0);
 		rand = new Random();
 		tempsAuLancement = Bomb.getTime();
 		// Initialize Player
@@ -88,8 +111,18 @@ public class Game extends BasicGameState{
 		background = new Sound("sons/builtToFall.wav");
 		
 		// Intialize level
-		File level = new File("niveaux/niveau1.txt");
+		File level = new File("niveaux/" + LEVEL + LEVEL_START+ ".txt");
 		initLevel(level);
+		
+		// Initialize timer
+		timerStart = Bomb.getTime();
+		
+		NB_BOMB_AVAILABLE = NB_BOMB_AT_START;
+		COEFF_DEPLACEMENT = COEFF_MIN;
+		TAILLE_EXPLOSION = TAILLE_EXPLODE_MIN;
+		CURRENT_TIME = TIMEGAME;
+		min = ((TIMEGAME/TIMER) % 3600) / 60;
+		s = (TIMEGAME/TIMER) % 60 ;
 	}
 	
 	// This method is called on some interval
@@ -99,9 +132,7 @@ public class Game extends BasicGameState{
 		if(!background.playing())
 		{
 			background.play();
-			gc.setMusicVolume(5);
 		}
-		
 		g.setBackground(new Color(255,255,255,.5f));
 		// Draw Board
 		drawBoard(g);
@@ -109,19 +140,17 @@ public class Game extends BasicGameState{
 		drawArray(p.getBombe(),g);
 		drawExplosion(p.getBombe(),g);
 		drawBonus(bonus,g);
-		// Draw Animation 
 		
+		// Check if bomberman walk on bonus
 		checkBonus(p);
 		tempsExecution = Bomb.getTime();
-		// Check if bomberman walk on bonus
+		// Draw Animation
 		if(p.isDeadDrawable())
 		{
 			g.drawAnimation(p.getDead(), p.getX(), p.getY());
 			if(p.getDead().getFrame() == 3)
 			{
-				NB_BOMB_AVAILABLE = NB_BOMB_AT_START;
-				COEFF_DEPLACEMENT = COEFF_MIN;
-				TAILLE_EXPLOSION = TAILLE_EXPLODE_MIN;
+				LIFE_AVAILABLE--;
 				init(gc, game);
 			}
 			
@@ -130,12 +159,55 @@ public class Game extends BasicGameState{
 		{
 			g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
 		}
+		
+		if(isLevelFinished)
+		{
+			LEVEL_START++;
+			init(gc,game);
+		}
+		
+		// Draw Hud and timer
+		g.drawImage(hud,0,0);
+		g.drawImage(compteur[LIFE_AVAILABLE], TAILLE_BOMB,9);
+		g.drawImage(timer,(NB_CASE_LARGEUR/2 - 1 ) * TAILLE_CASE,0);
+		g.drawImage(compteur[min],(NB_CASE_LARGEUR/2 - 1 ) * TAILLE_CASE + TAILLE_BOMB,9);
+		String sec = String.valueOf(s);
+		int sec1 = Character.getNumericValue(sec.charAt(0));
+		int sec2 = 0;
+		if(sec.length() > 1)
+		{
+			sec2 = Character.getNumericValue(sec.charAt(1));
+			g.drawImage(compteur[sec1],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*2 + TAILLE_BOMB,9);
+			g.drawImage(compteur[sec2],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*3 + TAILLE_BOMB,9);
+		}
+		else
+		{
+			g.drawImage(compteur[0],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*2 + TAILLE_BOMB,9);
+			g.drawImage(compteur[sec1],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*3 + TAILLE_BOMB,9);
+		} 
+		
+		// Draw count on timer
 	}
 	
 	// Game logic
 	@Override
 	public void update(GameContainer gc,StateBasedGame game, int delta) throws SlickException
 	{
+		if(tempsExecution - timerStart > TIMER) // Modify count here
+		{
+			CURRENT_TIME -= TIMER;
+			s = (CURRENT_TIME/TIMER) % 60;
+			min = ((CURRENT_TIME/TIMER) % 3600 ) / 60;
+			timerStart = Bomb.getTime();
+		}
+		if(s == 0 && min == 0)
+		{
+			isGameOver= true;
+			LIFE_AVAILABLE--;
+			init(gc,game);
+			
+		}
+		// If player is in explosion
 		if(p.isInExplosion())
 		{
 			p.setIsDeadDrawable(true);
@@ -166,7 +238,7 @@ public class Game extends BasicGameState{
 						bonus.add(new Bonus(EXPLODEMORE,bonusSheet.getSprite(4,0)));
 						break;
 					case 5:
-						bonus.add(new Bonus(GROWDMG,bonusSheet.getSprite(5, 0)));
+						bonus.add(new Bonus(DEAD,bonusSheet.getSprite(5, 0)));
 						break;
 					case 6:
 						bonus.add(new Bonus(EXPLODELESS,bonusSheet.getSprite(6, 0)));
@@ -306,6 +378,7 @@ public class Game extends BasicGameState{
 					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
 					    			{
 					    				bomb.setYBomb(bomb.getYBomb()-1);
+					    				bomb.getExplosion().setY(bomb.getYBomb());
 						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
 						    			timerDeplacementDepart = Bomb.getTime();
 						    			courante.setHasBombe(false);
@@ -328,6 +401,7 @@ public class Game extends BasicGameState{
 					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
 					    			{
 					    				bomb.setXBomb(bomb.getXBomb()-1);
+					    				bomb.getExplosion().setX(bomb.getXBomb());
 						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
 						    			timerDeplacementDepart = Bomb.getTime();
 						    			courante.setHasBombe(false);
@@ -349,6 +423,7 @@ public class Game extends BasicGameState{
 					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
 					    			{
 					    				bomb.setYBomb(bomb.getYBomb()+1);
+					    				bomb.getExplosion().setX(bomb.getYBomb());
 						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
 						    			timerDeplacementDepart = Bomb.getTime();
 						    			courante.setHasBombe(false);
@@ -370,6 +445,7 @@ public class Game extends BasicGameState{
 					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
 					    			{
 					    				bomb.setXBomb(bomb.getXBomb()+1);
+					    				bomb.getExplosion().setX(bomb.getXBomb());
 						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
 						    			timerDeplacementDepart = Bomb.getTime();
 						    			courante.setHasBombe(false);
@@ -514,7 +590,23 @@ public class Game extends BasicGameState{
 								type=WALL;
 								break;
 							case '3':
-								type =INDESTRUCTIBLE;
+								type=INDESTRUCTIBLE;
+								break;
+							case '4':
+								type=HOUSE;
+								break;
+							case '5':
+								type=WOOD;
+								break;
+							case '6':
+								type=GROUNDGRASSTEXAS;
+								break;
+							case '7':
+								type=GROUNDTEXAS;
+								break;
+							case '8':
+								type=EMPTY;
+								break;
 							}
 							
 							plateau[i][j] = new Case(j,i,type); // Create a case with the type set before
@@ -553,11 +645,32 @@ public class Game extends BasicGameState{
 					case INDESTRUCTIBLE:
 						toDraw = indestructible_wall;
 						break;
+					case HOUSE:
+						toDraw = house;
+						break;
+					case WOOD:
+						toDraw = wood;
+						break;
+					case GROUNDGRASSTEXAS:
+						toDraw = groundGrassTexas;
+						break;
+					case GROUNDTEXAS:
+						toDraw = groundTexas;
+						break;
+					case EMPTY:
+						toDraw = null;
+						break;
 					default:
 						toDraw = ground;
 						break;
 					}
+					if(toDraw != null)
 					g.drawImage(toDraw,plateau[i][j].getRealX(),plateau[i][j].getRealY());
+					else
+					{
+						g.setColor(new Color(240, 128, 0));
+						g.fillRect(plateau[i][j].getRealX(),plateau[i][j].getRealY() , TAILLE_CASE, TAILLE_CASE);
+					}
 			}
 		}
 	}
@@ -718,9 +831,11 @@ public class Game extends BasicGameState{
 					break;
 					
 					case BOXE:
+						p.setPushPlayer(true);
 					break;
 					
 					case UNBOXE:
+						p.setPushPlayer(false);
 					break;
 					
 					case EXPLODEMORE:
@@ -728,7 +843,8 @@ public class Game extends BasicGameState{
 							TAILLE_EXPLOSION++;
 					break;
 					
-					case GROWDMG:
+					case DEAD:
+						p.setIsDeadDrawable(true);
 					break;
 					
 					case EXPLODELESS:

@@ -1,7 +1,6 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -13,18 +12,10 @@ import javax.swing.JTextField;
 
 
 public class ServerBomberman implements ActionListener{
-	private static ServerSocket server = null;
-	private JTextField port = null;
-	private Thread threadServer = null;
-	private static int NB_CLIENTS_MAX = 4;
-	private static int NB_CLIENTS_CONNECTES = 0;
-	private static Socket[] clients = new Socket[NB_CLIENTS_MAX];
-
-	public static void main(String[] args)
-	{
-		// Set the server
-		new ServerBomberman();	
-	}
+	private  ServerSocket server = null;
+	private  JTextField port = null;
+	private  int NB_CLIENTS_MAX = 4;
+	private  int NB_CLIENTS_CONNECTES = 0;
 	
 	public ServerBomberman()
 	{
@@ -34,7 +25,6 @@ public class ServerBomberman implements ActionListener{
 		JButton exitButton = new JButton("Stop");
 		JLabel label = new JLabel("Sélectionnez le port d'écoute du serveur");
 		port = new JTextField(25);
-		
 		panel.add(label);
 		panel.add(port);
 		panel.add(button);
@@ -49,25 +39,6 @@ public class ServerBomberman implements ActionListener{
 					
 	}
 	
-	public static void serveurGo()
-	{
-		while(!server.isClosed())
-		{
-			try
-			{
-				clients[NB_CLIENTS_CONNECTES] = server.accept();
-				NB_CLIENTS_CONNECTES++;
-
-			}
-			catch(IOException io)
-			{
-				io.printStackTrace();
-			}
-		}
-		
-		System.out.println("Le serveur va se fermer");
-	}
-
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
@@ -76,26 +47,19 @@ public class ServerBomberman implements ActionListener{
 		{
 			if(server == null)
 			{
-				threadServer = new Thread(){
-					public void run()
-					{
-						try {
-							server = new ServerSocket(Integer.parseInt(port.getText()));
-							System.out.println("LE SERVEUR VA DEMARRE");
-							serveurGo();
-							
-						} catch (NumberFormatException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						} catch (IOException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-					}
-				};
-				threadServer.start();
-				
-				
+			
+				try {
+					server = new ServerSocket(Integer.parseInt(port.getText()));
+					Thread t = new Thread(new Test(server));
+					t.start();
+				} catch (NumberFormatException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+
 			}
 		}else if(button.getText() == "Stop")
 		{
@@ -108,17 +72,40 @@ public class ServerBomberman implements ActionListener{
 		}
 	}
 	
-	public static void sendToAllClient(String message) throws IOException
+	private class Test implements Runnable
 	{
-		OutputStream stream ;
-		for(int i = 0 ; i < clients.length; i++)
+		private ServerSocket serverSocket ;
+		private Socket socket;
+		
+		public Test(ServerSocket s)
 		{
-			Socket socket = clients[i];
-			stream = socket.getOutputStream();
-			byte[] b = message.getBytes();
-			stream.write(b);
-			stream.flush();
-			
+			this.serverSocket = s;
 		}
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			try
+			{
+				while(true)
+				{
+					if(NB_CLIENTS_CONNECTES < NB_CLIENTS_MAX && !serverSocket.isClosed())
+					{
+						socket = serverSocket.accept();
+						System.out.println("Le client numéro : " + NB_CLIENTS_CONNECTES + " est co");
+						NB_CLIENTS_CONNECTES++;
+						socket.close();
+					}
+					else
+					{
+						serverSocket.close();
+					}
+				}
+			}
+			catch(IOException io)
+			{
+				io.printStackTrace();
+			}
+		}
+		
 	}
 }

@@ -1,7 +1,7 @@
 import java.util.LinkedList;
-
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.SpriteSheet;
+import org.newdawn.slick.geom.Rectangle;
 
 public class Player {
 	
@@ -11,11 +11,12 @@ public class Player {
 	private Animation mortAnim;
 	float x, y;
 	private LinkedList<Bomb> bomb = new LinkedList<>();
-	private boolean canMoveBomb,isDeadDrawable;
+	private boolean canMoveBomb,isDeadDrawable,canPushPlayer;
 	
 	public Player(SpriteSheet sheet,int numColor,float x, float y,SpriteSheet mort)
 	{
 		this.isDeadDrawable = false;
+		this.canPushPlayer = false;
 		this.numColor = numColor;
 		this.mort = mort;
 		this.x = x ;
@@ -123,6 +124,16 @@ public class Player {
 		this.mortAnim = anim;
 	}
 	
+	public boolean canPushPlayer()
+	{
+		return this.canPushPlayer;
+	}
+	
+	public void setPushPlayer(boolean canPush)
+	{
+		this.canPushPlayer = canPush;
+	}
+	
 	public boolean isOnBomb()
 	{
 		for(int i = 0 ; i < bomb.size() ; i++)
@@ -153,6 +164,7 @@ public class Player {
 		return null;
 	}
 	
+	// Check if the player is in explosion of it own bomb
 	public boolean isInExplosion()
 	{
 		for(Bomb b : bomb)
@@ -162,9 +174,38 @@ public class Player {
 				Explosion e = b.getExplosion();
 				if(e != null && e.isDrawable())
 				{
-					
-					
-					
+					float xGauche = e.getX() - Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION;
+					Rectangle rectangleHorizontal = new Rectangle(xGauche,e.getY(),(Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION)*2 + Game.TAILLE_BOMB + Game.TAILLE_EXPLOSION,Game.TAILLE_BOMB);
+					float yHaut = e.getY() - Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION;
+					Rectangle rectangleVertical = new Rectangle(e.getX(),yHaut,Game.TAILLE_BOMB,(Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION)*2 + Game.TAILLE_BOMB + Game.TAILLE_EXPLOSION);
+					if(rectangleHorizontal.contains(x+Game.TAILLE_CASE/2,y+Game.TAILLE_CASE/2) || rectangleVertical.contains(x + Game.TAILLE_CASE/2, y + Game.TAILLE_CASE/2))
+					{
+						return true;
+					}
+ 				}
+			}
+		}
+		return false;
+	}
+	
+	// Check if the player is on explosion of an other player
+	public boolean isInExplosion(Player p)
+	{
+		for(Bomb b : p.getBombe())
+		{
+			if(b != null)
+			{
+				Explosion e = b.getExplosion();
+				if(e != null && e.isDrawable())
+				{
+					float xGauche = e.getX() - Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION;
+					Rectangle rectangleHorizontal = new Rectangle(xGauche,e.getY(),(Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION)*2 + Game.TAILLE_BOMB + Game.TAILLE_EXPLOSION,Game.TAILLE_BOMB);
+					float yHaut = e.getY() - Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION;
+					Rectangle rectangleVertical = new Rectangle(e.getX(),yHaut,Game.TAILLE_BOMB,(Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION)*2 + Game.TAILLE_BOMB + Game.TAILLE_EXPLOSION);
+					if(rectangleHorizontal.contains(x+Game.TAILLE_CASE/2,y+Game.TAILLE_CASE/2) || rectangleVertical.contains(x + Game.TAILLE_CASE/2,y + Game.TAILLE_CASE/2))
+					{
+						return true;
+					}
  				}
 			}
 		}
