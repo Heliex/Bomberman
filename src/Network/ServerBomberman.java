@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 
 import MainGame.Game;
 
@@ -12,10 +13,11 @@ public class ServerBomberman {
 	public static int NB_CLIENTS_CONNECTES = 0;
 	public static ServerSocket serverSocket ;
 	public static Game game = new Game(true);
+	public static ArrayList<GestionClient> listeClient = new ArrayList<GestionClient>();
 	
 	public static void main(String[] args) throws IOException
 	{
-		boolean listening = true;
+		boolean listening = true,sent = false;
 		try
 		{
 			serverSocket = new ServerSocket(4444);
@@ -28,17 +30,39 @@ public class ServerBomberman {
 		
 		while(listening)
 		{
-			try
+			while(NB_CLIENTS_CONNECTES < NB_CLIENTS_MAX)
 			{
-				Socket clientSocket = serverSocket.accept();
-				MiniServer mini = new MiniServer(clientSocket,game);
-				mini.start();
-				NB_CLIENTS_CONNECTES++;
+				try
+				{
+					Socket client = serverSocket.accept();
+					GestionClient gestion = new GestionClient(client);
+					gestion.start();
+					listeClient.add(gestion);
+					NB_CLIENTS_CONNECTES++;
+					for( GestionClient g : listeClient)
+					{
+						if(g!= null)
+						{
+							g.sendMessage("Joueurs connectés : " + NB_CLIENTS_CONNECTES + "/" + NB_CLIENTS_MAX);
+						}
+					}
+					System.out.println("Connexion du client : " + NB_CLIENTS_CONNECTES);
+				}
+				catch(SocketException socket)
+				{
+					socket.printStackTrace();
+				}
 			}
-			catch(SocketException socket)
+			
+			for(GestionClient g : listeClient)
 			{
-				socket.printStackTrace();
+				if(!sent)
+				{
+					g.sendMessage("La partie va commencée");
+					g.readMessage();
+				}
 			}
+			sent = true;
 		}
 		serverSocket.close();
 	}

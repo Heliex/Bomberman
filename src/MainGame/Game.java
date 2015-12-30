@@ -61,18 +61,18 @@ public class Game extends BasicGameState implements Serializable{
 	public static int CURRENT_TIME,s,min;
 	
 	// Other variables
-	private boolean isMoving = false,isGameOver = false, isNewtorkGame ;
+	private boolean isMoving = false,isGameOver = false, isNewtorkGame;
 	private boolean isLevelFinished;
 	private int direction = 0;
 	private Player[] players = new Player[ServerBomberman.NB_CLIENTS_MAX] ;
 	private Case[][] plateau;
-	private Image wall,ground,indestructible_wall,groundGrass, house, wood, groundGrassTexas,groundTexas,hud,timer;
-	private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet,numbers;
-	private Image[] compteur = new Image[10];
+	transient private Image wall,ground,indestructible_wall,groundGrass, house, wood, groundGrassTexas,groundTexas,hud,timer;
+	transient private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet,numbers;
+	transient private Image[] compteur = new Image[10];
 	private LinkedList<Bonus> bonus ;
 	private long tempsExecution = 0,tempsAuLancement = 0,timerStart=0;
 	private Random rand ;
-	private Sound bonusSound,bombExplode, background;
+	transient private Sound bonusSound,bombExplode, background;
 	private int numPlayer = 0;
 	
 	public Game()
@@ -84,9 +84,7 @@ public class Game extends BasicGameState implements Serializable{
 		isNewtorkGame = network;
 	}
 	
-	// This is method is called when windows is opening
-	@Override
-	public void init(GameContainer gc,StateBasedGame game) throws SlickException
+	public void initialisation() throws SlickException
 	{
 		isLevelFinished = false;
 		isGameOver = false;
@@ -153,6 +151,13 @@ public class Game extends BasicGameState implements Serializable{
 		CURRENT_TIME = TIMEGAME;
 		min = ((TIMEGAME/TIMER) % 3600) / 60;
 		s = (TIMEGAME/TIMER) % 60 ;
+	}
+	
+	// This is method is called when windows is opening
+	@Override
+	public void init(GameContainer gc,StateBasedGame game) throws SlickException
+	{
+		initialisation();
 	}
 	
 	// This method is called on some interval

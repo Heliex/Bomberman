@@ -1,15 +1,15 @@
 package Network;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class ClientBomberman {
 	
 	private Socket socket;
-	private ObjectInputStream in;
-	private ObjectOutputStream out;
+	private BufferedInputStream reader;
+	private BufferedOutputStream output;
 	private int port;
 	private String host;
 	
@@ -19,8 +19,8 @@ public class ClientBomberman {
 		this.port = port;
 		try {
 			this.socket = new Socket(host,port);
-			this.out = new ObjectOutputStream(socket.getOutputStream());
-			this.in = new ObjectInputStream(socket.getInputStream());
+			this.reader = new BufferedInputStream(socket.getInputStream());
+			this.output = new BufferedOutputStream(socket.getOutputStream());
 			
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -29,36 +29,6 @@ public class ClientBomberman {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-	
-	public void writeObject(Object obj)
-	{
-		try
-		{
-			out.writeObject(obj);
-			out.flush();
-		}
-		catch(IOException io)
-		{
-			io.printStackTrace();
-		}
-	}
-	public Object readObject()
-	{
-		Object o = null;
-		try
-		{
-			o = in.readObject();
-		}
-		catch(IOException io)
-		{
-			io.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return o;
 	}
 	
 	public int getPort()
@@ -79,5 +49,35 @@ public class ClientBomberman {
 	public void setHost(String host)
 	{
 		this.host = host;
+	}
+	
+	public Socket getSocket()
+	{
+		return this.socket;
+	}
+	
+	public void setSocket(Socket s)
+	{
+		this.socket = s;
+	}
+	
+	public String readMessage()
+	{
+		String s = null;
+		byte[] b = new byte[4096];
+		try {
+			int stream = reader.read(b);
+			s = new String(b,0,stream);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return s;
+	}
+	
+	public void sendMessage(String message) throws IOException
+	{
+		output.write(message.getBytes());
+		output.flush();
 	}
 }
