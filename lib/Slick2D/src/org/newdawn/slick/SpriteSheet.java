@@ -24,7 +24,10 @@ public class SpriteSheet extends Image {
 	private int spacing;
 	/** The target image for this sheet */
 	private Image target;
-
+	
+	public SpriteSheet()
+	{
+	}
 	/**
 	 * Create a new sprite sheet based on a image location
 	 * 

@@ -1,15 +1,24 @@
+package Graphique;
+import java.io.Serializable;
 
-public class Case {
+import MainGame.Game;
 
+public class Case implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3332305466971179346L;
 	int x;
 	int y;
 	String type;
-	boolean hasBonus,hasBombe;
+	private boolean hasBonus;
+	boolean hasBombe;
 	public Case()
 	{
 		this.x = 0;
 		this.y = 0;
-		this.hasBonus = false;
+		this.setHasBonus(false);
 		this.hasBombe = false;
 	}
 	
@@ -18,7 +27,7 @@ public class Case {
 		this.x = x ;
 		this.y = y;
 		this.type = type;
-		this.hasBonus = false;
+		this.setHasBonus(false);
 	}
 	
 	public int getX()
@@ -68,12 +77,12 @@ public class Case {
 	
 	public boolean hasBonus()
 	{
-		return this.hasBonus;
+		return this.isHasBonus();
 	}
 	
 	public void setHasbonus(boolean hasBonus)
 	{
-		this.hasBonus = hasBonus;
+		this.setHasBonus(hasBonus);
 	}
 	
 	public boolean hasBombe()
@@ -88,5 +97,13 @@ public class Case {
 	public boolean equals(Case c2)
 	{
 		return (this.x == c2.getX() && this.y == c2.getY()) ? true : false;
+	}
+
+	public boolean isHasBonus() {
+		return hasBonus;
+	}
+
+	public void setHasBonus(boolean hasBonus) {
+		this.hasBonus = hasBonus;
 	}
 }

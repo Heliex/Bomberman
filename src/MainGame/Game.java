@@ -1,9 +1,11 @@
+package MainGame;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -19,9 +21,20 @@ import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
+import Graphique.Bomb;
+import Graphique.Bonus;
+import Graphique.Case;
+import Graphique.Explosion;
+import Graphique.Player;
+import Network.ServerBomberman;
 
-public class Game extends BasicGameState{
+
+public class Game extends BasicGameState implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4628054333033856137L;
 	// All CONSTANT
 	public final static int UP = 0, LEFT = 1, DOWN = 2, RIGHT = 3, LEVEL_AT_START=1,LIFE_AT_START = 5;
 	public final static int LARGEUR_SPRITE = 18, HAUTEUR_SPRITE = 32,LARGEUR_NUMBER=8,HAUTEUR_NUMBER=14;
@@ -40,7 +53,6 @@ public class Game extends BasicGameState{
 	public final static String WALL = "WALL",GROUND= "GROUND", GRASSGROUND = "GRASSGROUND",INDESTRUCTIBLE ="INDESTRUCTIBLE",
 			HOUSE = "HOUSE", WOOD = "WOOD", GROUNDGRASSTEXAS="GROUNDGRASSTEXAS", GROUNDTEXAS="GROUNDTEXAS", EMPTY = "EMPTY" ;
 	public final static float COEFF_MAX = 0.25f,EXPLOSION_MAX = 4, COEFF_MIN = 0.10f;
-	
 	// All static but modifiable variables
 	public static int NB_BOMB_AVAILABLE= 1,NB_BOMB_ON_BOARD = 0,LEVEL_START=1,LIFE_AVAILABLE=5;
 	public static int NB_OBJECTIVE = 3;
@@ -49,10 +61,10 @@ public class Game extends BasicGameState{
 	public static int CURRENT_TIME,s,min;
 	
 	// Other variables
-	private boolean isMoving = false,isGameOver = false ;
+	private boolean isMoving = false,isGameOver = false, isNewtorkGame ;
 	private boolean isLevelFinished;
 	private int direction = 0;
-	private Player p ;
+	private Player[] players = new Player[ServerBomberman.NB_CLIENTS_MAX] ;
 	private Case[][] plateau;
 	private Image wall,ground,indestructible_wall,groundGrass, house, wood, groundGrassTexas,groundTexas,hud,timer;
 	private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet,numbers;
@@ -60,12 +72,24 @@ public class Game extends BasicGameState{
 	private LinkedList<Bonus> bonus ;
 	private long tempsExecution = 0,tempsAuLancement = 0,timerStart=0;
 	private Random rand ;
-	private Sound bonusSound,bombExplode,background;
+	private Sound bonusSound,bombExplode, background;
+	private int numPlayer = 0;
+	
+	public Game()
+	{
+	}
+	
+	public Game(boolean network)
+	{
+		isNewtorkGame = network;
+	}
+	
 	// This is method is called when windows is opening
 	@Override
 	public void init(GameContainer gc,StateBasedGame game) throws SlickException
 	{
 		isLevelFinished = false;
+		isGameOver = false;
 		// Initialize SpriteSheet
 		sheet = new SpriteSheet("images/Deplacements.png",LARGEUR_SPRITE,HAUTEUR_SPRITE);
 		bombSheet = new SpriteSheet("images/Bombe.png",TAILLE_BOMB,TAILLE_BOMB);
@@ -99,8 +123,14 @@ public class Game extends BasicGameState{
 		compteur[9] = numbers.getSprite(9, 0);
 		rand = new Random();
 		tempsAuLancement = Bomb.getTime();
+		
 		// Initialize Player
-		p = new Player(sheet,0,0,TAILLE_CASE,deadSheet);
+		players[0] = new Player(sheet,0,0,TAILLE_CASE,deadSheet);
+		players[1] = new Player(sheet,1,(NB_CASE_LARGEUR - 1) * TAILLE_CASE,TAILLE_CASE,deadSheet);
+		players[2] = new Player(sheet,2,0,(NB_CASE_HAUTEUR -1) * TAILLE_CASE,deadSheet);
+		players[3] = new Player(sheet,3,(NB_CASE_LARGEUR - 1) * TAILLE_CASE,(NB_CASE_HAUTEUR - 1) * TAILLE_CASE,deadSheet);
+		if(!isNewtorkGame)
+			players[0].setDrawable(true);
 		// Initialize board
 		plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
 		bonus = new LinkedList<Bonus>();
@@ -110,7 +140,7 @@ public class Game extends BasicGameState{
 		bombExplode = new Sound("sons/bombExplode.wav");
 		background = new Sound("sons/builtToFall.wav");
 		
-		// Intialize level
+		// Initialize level
 		File level = new File("niveaux/" + LEVEL + LEVEL_START+ ".txt");
 		initLevel(level);
 		
@@ -129,64 +159,73 @@ public class Game extends BasicGameState{
 	@Override
 	public void render(GameContainer gc,StateBasedGame game, Graphics g) throws SlickException // Render
 	{
-		if(!background.playing())
-		{
-			background.play();
-		}
-		g.setBackground(new Color(255,255,255,.5f));
-		// Draw Board
-		drawBoard(g);
-		// Draw All Bombe And Explosion
-		drawArray(p.getBombe(),g);
-		drawExplosion(p.getBombe(),g);
-		drawBonus(bonus,g);
-		
-		// Check if bomberman walk on bonus
-		checkBonus(p);
-		tempsExecution = Bomb.getTime();
-		// Draw Animation
-		if(p.isDeadDrawable())
-		{
-			g.drawAnimation(p.getDead(), p.getX(), p.getY());
-			if(p.getDead().getFrame() == 3)
+			if(background != null)
 			{
-				LIFE_AVAILABLE--;
-				init(gc, game);
+				if(!background.playing())
+				{
+					background.play();
+				}
+			}
+			g.setBackground(new Color(255,255,255,.5f));
+			// Draw Board
+			drawBoard(g);
+			for(int i = 0 ; i < ServerBomberman.NB_CLIENTS_MAX ; i++)
+			{
+				if(players[i].isDrawable())
+				{
+					// Draw All Bombe And Explosion
+					drawArray(players[i].getBombe(),g);
+					drawExplosion(players[i].getBombe(),g);
+					drawBonus(bonus,g);
+					
+					// Check if bomberman walk on bonus
+					checkBonus(players[i]);
+					tempsExecution = Bomb.getTime();
+					// Draw Animation
+					if(players[i].isDeadDrawable())
+					{
+						g.drawAnimation(players[i].getDead(), players[i].getX(), players[i].getY());
+						if(players[i].getDead().getFrame() == 3)
+						{
+							LIFE_AVAILABLE--;
+							init(gc, game);
+						}
+						
+					}
+					else
+					{
+						g.drawAnimation(players[i].getAnimation(direction + ( isMoving ? 4 : 0)), players[i].getX(), players[i].getY());
+					}
+				}
 			}
 			
-		}
-		else
-		{
-			g.drawAnimation(p.getAnimation(direction + ( isMoving ? 4 : 0)), p.getX(), p.getY());
-		}
-		
-		if(isLevelFinished)
-		{
-			LEVEL_START++;
-			init(gc,game);
-		}
-		
-		// Draw Hud and timer
-		g.drawImage(hud,0,0);
-		g.drawImage(compteur[LIFE_AVAILABLE], TAILLE_BOMB,9);
-		g.drawImage(timer,(NB_CASE_LARGEUR/2 - 1 ) * TAILLE_CASE,0);
-		g.drawImage(compteur[min],(NB_CASE_LARGEUR/2 - 1 ) * TAILLE_CASE + TAILLE_BOMB,9);
-		String sec = String.valueOf(s);
-		int sec1 = Character.getNumericValue(sec.charAt(0));
-		int sec2 = 0;
-		if(sec.length() > 1)
-		{
-			sec2 = Character.getNumericValue(sec.charAt(1));
-			g.drawImage(compteur[sec1],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*2 + TAILLE_BOMB,9);
-			g.drawImage(compteur[sec2],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*3 + TAILLE_BOMB,9);
-		}
-		else
-		{
-			g.drawImage(compteur[0],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*2 + TAILLE_BOMB,9);
-			g.drawImage(compteur[sec1],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*3 + TAILLE_BOMB,9);
-		} 
-		
-		// Draw count on timer
+			// Draw Hud and timer
+			g.drawImage(hud,0,0);
+			g.drawImage(compteur[LIFE_AVAILABLE], TAILLE_BOMB,9);
+			g.drawImage(timer,(NB_CASE_LARGEUR/2 - 1 ) * TAILLE_CASE,0);
+			g.drawImage(compteur[min],(NB_CASE_LARGEUR/2 - 1 ) * TAILLE_CASE + TAILLE_BOMB,9);
+			String sec = String.valueOf(s);
+			int sec1 = Character.getNumericValue(sec.charAt(0));
+			int sec2 = 0;
+			if(sec.length() > 1)
+			{
+				sec2 = Character.getNumericValue(sec.charAt(1));
+				g.drawImage(compteur[sec1],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*2 + TAILLE_BOMB,9);
+				g.drawImage(compteur[sec2],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*3 + TAILLE_BOMB,9);
+			}
+			else
+			{
+				g.drawImage(compteur[0],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*2 + TAILLE_BOMB,9);
+				g.drawImage(compteur[sec1],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*3 + TAILLE_BOMB,9);
+			} 
+			
+			if(isLevelFinished)
+			{
+				LEVEL_START++;
+				init(gc,game);
+			}
+			
+			// Draw count on timer
 	}
 	
 	// Game logic
@@ -207,11 +246,38 @@ public class Game extends BasicGameState{
 			init(gc,game);
 			
 		}
-		// If player is in explosion
-		if(p.isInExplosion())
+		for(int i = 0 ; i < ServerBomberman.NB_CLIENTS_MAX ; i++)
 		{
-			p.setIsDeadDrawable(true);
+			if(players[i].isInExplosion() && players[i].isDrawable())
+			{
+				players[i].setIsDeadDrawable(true);
+			}
+			// Check if you can move before move
+			if(canMove(players[i],direction,delta) && players[i].isDrawable())
+			{
+				if(this.isMoving)
+				{
+					switch(direction)
+					{
+					case UP :
+						players[i].setY(players[i].getY() - delta * COEFF_DEPLACEMENT); 	
+					break;
+					case LEFT : 
+						players[i].setX(players[i].getX() - delta * COEFF_DEPLACEMENT); 
+					break;
+					case DOWN : 
+						players[i].setY(players[i].getY() + delta * COEFF_DEPLACEMENT); 
+					break;
+					case RIGHT : 
+						players[i].setX(players[i].getX() + delta * COEFF_DEPLACEMENT); 
+					break;
+					}
+				}
+			}
+			
 		}
+		// If player is in explosion
+		
 		// Add random bonus on map at every interval
 		if(tempsExecution - tempsAuLancement > TIME_TO_BONUS_APPEAR)
 		{
@@ -286,31 +352,7 @@ public class Game extends BasicGameState{
 				}
 			}).start();
 			tempsAuLancement = Bomb.getTime();
-		}
-		// Check if you can move before move
-		if(canMove(p,direction,delta))
-		{
-			if(this.isMoving)
-			{
-				switch(direction)
-				{
-				case UP :
-					p.setY(p.getY() - delta * COEFF_DEPLACEMENT); 	
-				break;
-				case LEFT : 
-					p.setX(p.getX() - delta * COEFF_DEPLACEMENT); 
-				break;
-				case DOWN : 
-					p.setY(p.getY() + delta * COEFF_DEPLACEMENT); 
-				break;
-				case RIGHT : 
-					p.setX(p.getX() + delta * COEFF_DEPLACEMENT); 
-				break;
-				}
-			}
-		}
-		
-			
+		}	
 	}
 	
 	// Catch key pressed events
@@ -341,17 +383,17 @@ public class Game extends BasicGameState{
 			break;
 			
 		case Input.KEY_B:
-			if(p.getBombe().size() < NB_BOMB_AVAILABLE)
+			if(players[numPlayer].getBombe().size() < NB_BOMB_AVAILABLE)
 			{
 				new Thread(new Runnable(){
 					public void run()
 					{
-						Case c = getCaseFromCoord(p.getX()+TAILLE_CASE/2, p.getY()+TAILLE_CASE - (TAILLE_CASE/2));
+						Case c = getCaseFromCoord(players[numPlayer].getX()+TAILLE_CASE/2, players[numPlayer].getY()+TAILLE_CASE - (TAILLE_CASE/2));
 						if(c.getType() != "WALL" && c.getType() != "INDESTRUCTIBLE" && !c.hasBombe())
 						{
 							plateau[c.getY()][c.getX()].setHasBombe(true);
 							Bomb b = new Bomb(bombSheet,c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,new Explosion(c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,explosionSheet));
-							p.getBombe().add(b);
+							players[numPlayer].getBombe().add(b);
 						}
 					}
 				}).start();
@@ -361,9 +403,9 @@ public class Game extends BasicGameState{
 			System.exit(0);
 			break;
 		case Input.KEY_X:
-		    if(p.isOnBomb() && p.canMoveBomb())
+		    if(players[numPlayer].isOnBomb() && players[numPlayer].canMoveBomb())
 		    {
-		    	Bomb bomb = p.getBombFromCoord(p.getX(), p.getY());
+		    	Bomb bomb = players[numPlayer].getBombFromCoord(players[numPlayer].getX(), players[numPlayer].getY());
 		    	switch(direction)
 		    	{
 			    	case UP:
@@ -664,7 +706,7 @@ public class Game extends BasicGameState{
 						toDraw = ground;
 						break;
 					}
-					if(toDraw != null)
+					if(toDraw != null && plateau != null)
 					g.drawImage(toDraw,plateau[i][j].getRealX(),plateau[i][j].getRealY());
 					else
 					{
@@ -795,7 +837,7 @@ public class Game extends BasicGameState{
 		for(int i = 0 ; i < bonus.size() ; i++)
 		{
 			Case toCompare = getCaseFromIndice(bonus.get(i).getX(),bonus.get(i).getY());
-			if(c.equals(toCompare) && toCompare.hasBonus)
+			if(c.equals(toCompare) && toCompare.isHasBonus())
 			{
 				bonus.get(i).setDrawable(false);
 				toCompare.setHasbonus(false);
@@ -884,4 +926,29 @@ public class Game extends BasicGameState{
 			}
 			return null;
 		}
+		
+	public Case[][] getBoard()
+	{
+		return this.plateau;
+	}
+	
+	public int getNumPlayer()
+	{
+		return this.numPlayer;
+	}
+	
+	public void setNumPlayer(int num)
+	{
+		this.numPlayer = num;
+	}
+	
+	public SpriteSheet getDeplacementSheet()
+	{
+		return this.sheet;
+	}
+	
+	public Player[] getPlayers()
+	{
+		return this.players;
+	}
 }

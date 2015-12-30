@@ -1,20 +1,30 @@
+package Graphique;
+import java.io.Serializable;
 import java.util.LinkedList;
+
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.SpriteSheet;
 import org.newdawn.slick.geom.Rectangle;
 
-public class Player {
+import MainGame.Game;
+
+public class Player implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 357065401577665717L;
 	private int numColor;
-	SpriteSheet sheet,mort;
-	private Animation[] animations = new Animation[8];
-	private Animation mortAnim;
+	transient SpriteSheet sheet,mort;
+	transient private Animation[] animations = new Animation[8];
+	transient private Animation mortAnim;
 	float x, y;
-	private LinkedList<Bomb> bomb = new LinkedList<>();
-	private boolean canMoveBomb,isDeadDrawable,canPushPlayer;
+	transient private LinkedList<Bomb> bomb = new LinkedList<>();
+	private boolean canMoveBomb,isDeadDrawable,canPushPlayer,isDrawable;
 	
 	public Player(SpriteSheet sheet,int numColor,float x, float y,SpriteSheet mort)
 	{
+		this.isDrawable = false;
 		this.isDeadDrawable = false;
 		this.canPushPlayer = false;
 		this.numColor = numColor;
@@ -167,22 +177,25 @@ public class Player {
 	// Check if the player is in explosion of it own bomb
 	public boolean isInExplosion()
 	{
-		for(Bomb b : bomb)
+		if(bomb != null)
 		{
-			if(b != null)
+			for(Bomb b : bomb)
 			{
-				Explosion e = b.getExplosion();
-				if(e != null && e.isDrawable())
+				if(b != null)
 				{
-					float xGauche = e.getX() - Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION;
-					Rectangle rectangleHorizontal = new Rectangle(xGauche,e.getY(),(Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION)*2 + Game.TAILLE_BOMB + Game.TAILLE_EXPLOSION,Game.TAILLE_BOMB);
-					float yHaut = e.getY() - Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION;
-					Rectangle rectangleVertical = new Rectangle(e.getX(),yHaut,Game.TAILLE_BOMB,(Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION)*2 + Game.TAILLE_BOMB + Game.TAILLE_EXPLOSION);
-					if(rectangleHorizontal.contains(x+Game.TAILLE_CASE/2,y+Game.TAILLE_CASE/2) || rectangleVertical.contains(x + Game.TAILLE_CASE/2, y + Game.TAILLE_CASE/2))
+					Explosion e = b.getExplosion();
+					if(e != null && e.isDrawable())
 					{
-						return true;
-					}
- 				}
+						float xGauche = e.getX() - Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION;
+						Rectangle rectangleHorizontal = new Rectangle(xGauche,e.getY(),(Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION)*2 + Game.TAILLE_BOMB + Game.TAILLE_EXPLOSION,Game.TAILLE_BOMB);
+						float yHaut = e.getY() - Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION;
+						Rectangle rectangleVertical = new Rectangle(e.getX(),yHaut,Game.TAILLE_BOMB,(Game.TAILLE_BOMB * Game.TAILLE_EXPLOSION)*2 + Game.TAILLE_BOMB + Game.TAILLE_EXPLOSION);
+						if(rectangleHorizontal.contains(x+Game.TAILLE_CASE/2,y+Game.TAILLE_CASE/2) || rectangleVertical.contains(x + Game.TAILLE_CASE/2, y + Game.TAILLE_CASE/2))
+						{
+							return true;
+						}
+	 				}
+				}
 			}
 		}
 		return false;
@@ -210,5 +223,20 @@ public class Player {
 			}
 		}
 		return false;
+	}
+	
+	public String toString()
+	{
+		return "Position du joueur : X " + x + " Y : " + y ;
+	}
+	
+	public void setDrawable(boolean drawable)
+	{
+		this.isDrawable = drawable;
+	}
+	
+	public boolean isDrawable()
+	{
+		return this.isDrawable;
 	}
 }

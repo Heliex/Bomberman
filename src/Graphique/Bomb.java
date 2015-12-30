@@ -1,9 +1,16 @@
+package Graphique;
+import java.io.Serializable;
+
 import org.lwjgl.Sys;
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.SpriteSheet;
 
-public class Bomb {
+public class Bomb implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3677888271498285808L;
 	private Animation animation;
 	private SpriteSheet sheet;
 	private float xBomb,yBomb;

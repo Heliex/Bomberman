@@ -1,6 +1,13 @@
+package Graphique;
+import java.io.Serializable;
+
 import org.newdawn.slick.Image;
 
-public class Bonus {
+public class Bonus implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2494919354680379842L;
 	private String nom;
 	private Image image;
 	private boolean isDrawable;

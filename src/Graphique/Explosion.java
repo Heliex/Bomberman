@@ -1,3 +1,4 @@
+package Graphique;
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.SpriteSheet;
 

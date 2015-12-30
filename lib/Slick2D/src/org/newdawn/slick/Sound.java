@@ -16,7 +16,11 @@ import org.newdawn.slick.util.Log;
 public class Sound {
 	/** The internal sound effect represent this sound */
 	private Audio sound;
-
+	
+	public Sound()
+	{
+		
+	}
 	/**
 	 * Create a new Sound 
 	 * 
