@@ -26,7 +26,7 @@ import Graphique.Bonus;
 import Graphique.Case;
 import Graphique.Explosion;
 import Graphique.Player;
-import Network.ServerBomberman;
+import Network.Server;
 
 
 public class Game extends BasicGameState implements Serializable{
@@ -64,7 +64,7 @@ public class Game extends BasicGameState implements Serializable{
 	private boolean isMoving = false,isGameOver = false, isNewtorkGame;
 	private boolean isLevelFinished;
 	private int direction = 0;
-	private Player[] players = new Player[ServerBomberman.NB_CLIENTS_MAX] ;
+	private Player[] players = new Player[Server.NB_MAX] ;
 	private Case[][] plateau;
 	transient private Image wall,ground,indestructible_wall,groundGrass, house, wood, groundGrassTexas,groundTexas,hud,timer;
 	transient private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet,numbers;
@@ -174,56 +174,61 @@ public class Game extends BasicGameState implements Serializable{
 			g.setBackground(new Color(255,255,255,.5f));
 			// Draw Board
 			drawBoard(g);
-			for(int i = 0 ; i < ServerBomberman.NB_CLIENTS_MAX ; i++)
+			for(int i = 0 ; i < Server.NB_MAX ; i++)
 			{
-				if(players[i].isDrawable())
+				if(players[i] != null)
 				{
-					// Draw All Bombe And Explosion
-					drawArray(players[i].getBombe(),g);
-					drawExplosion(players[i].getBombe(),g);
-					drawBonus(bonus,g);
-					
-					// Check if bomberman walk on bonus
-					checkBonus(players[i]);
-					tempsExecution = Bomb.getTime();
-					// Draw Animation
-					if(players[i].isDeadDrawable())
+					if(players[i].isDrawable())
 					{
-						g.drawAnimation(players[i].getDead(), players[i].getX(), players[i].getY());
-						if(players[i].getDead().getFrame() == 3)
-						{
-							LIFE_AVAILABLE--;
-							init(gc, game);
-						}
+						// Draw All Bombe And Explosion
+						drawArray(players[i].getBombe(),g);
+						drawExplosion(players[i].getBombe(),g);
+						drawBonus(bonus,g);
 						
-					}
-					else
-					{
-						g.drawAnimation(players[i].getAnimation(direction + ( isMoving ? 4 : 0)), players[i].getX(), players[i].getY());
+						// Check if bomberman walk on bonus
+						checkBonus(players[i]);
+						tempsExecution = Bomb.getTime();
+						// Draw Animation
+						if(players[i].isDeadDrawable())
+						{
+							g.drawAnimation(players[i].getDead(), players[i].getX(), players[i].getY());
+							if(players[i].getDead().getFrame() == 3)
+							{
+								LIFE_AVAILABLE--;
+								init(gc, game);
+							}
+							
+						}
+						else
+						{
+							g.drawAnimation(players[i].getAnimation(direction + ( isMoving ? 4 : 0)), players[i].getX(), players[i].getY());
+						}
 					}
 				}
 			}
 			
 			// Draw Hud and timer
-			g.drawImage(hud,0,0);
-			g.drawImage(compteur[LIFE_AVAILABLE], TAILLE_BOMB,9);
-			g.drawImage(timer,(NB_CASE_LARGEUR/2 - 1 ) * TAILLE_CASE,0);
-			g.drawImage(compteur[min],(NB_CASE_LARGEUR/2 - 1 ) * TAILLE_CASE + TAILLE_BOMB,9);
-			String sec = String.valueOf(s);
-			int sec1 = Character.getNumericValue(sec.charAt(0));
-			int sec2 = 0;
-			if(sec.length() > 1)
+			if(hud != null && compteur[LIFE_AVAILABLE] != null && timer != null && compteur[min] != null)
 			{
-				sec2 = Character.getNumericValue(sec.charAt(1));
-				g.drawImage(compteur[sec1],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*2 + TAILLE_BOMB,9);
-				g.drawImage(compteur[sec2],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*3 + TAILLE_BOMB,9);
+				g.drawImage(hud,0,0);
+				g.drawImage(compteur[LIFE_AVAILABLE], TAILLE_BOMB,9);
+				g.drawImage(timer,(NB_CASE_LARGEUR/2 - 1 ) * TAILLE_CASE,0);
+				g.drawImage(compteur[min],(NB_CASE_LARGEUR/2 - 1 ) * TAILLE_CASE + TAILLE_BOMB,9);
+				String sec = String.valueOf(s);
+				int sec1 = Character.getNumericValue(sec.charAt(0));
+				int sec2 = 0;
+				if(sec.length() > 1)
+				{
+					sec2 = Character.getNumericValue(sec.charAt(1));
+					g.drawImage(compteur[sec1],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*2 + TAILLE_BOMB,9);
+					g.drawImage(compteur[sec2],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*3 + TAILLE_BOMB,9);
+				}
+				else
+				{
+					g.drawImage(compteur[0],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*2 + TAILLE_BOMB,9);
+					g.drawImage(compteur[sec1],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*3 + TAILLE_BOMB,9);
+				} 
 			}
-			else
-			{
-				g.drawImage(compteur[0],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*2 + TAILLE_BOMB,9);
-				g.drawImage(compteur[sec1],(NB_CASE_LARGEUR/2 -1) * TAILLE_CASE + LARGEUR_NUMBER*3 + TAILLE_BOMB,9);
-			} 
-			
 			if(isLevelFinished)
 			{
 				LEVEL_START++;
@@ -251,35 +256,37 @@ public class Game extends BasicGameState implements Serializable{
 			init(gc,game);
 			
 		}
-		for(int i = 0 ; i < ServerBomberman.NB_CLIENTS_MAX ; i++)
+		for(int i = 0 ; i < Server.NB_MAX ; i++)
 		{
-			if(players[i].isInExplosion() && players[i].isDrawable())
+			if(players[i] != null)
 			{
-				players[i].setIsDeadDrawable(true);
-			}
-			// Check if you can move before move
-			if(canMove(players[i],direction,delta) && players[i].isDrawable())
-			{
-				if(this.isMoving)
+				if(players[i].isInExplosion() && players[i].isDrawable())
 				{
-					switch(direction)
+					players[i].setIsDeadDrawable(true);
+				}
+				// Check if you can move before move
+				if(canMove(players[i],direction,delta) && players[i].isDrawable())
+				{
+					if(this.isMoving)
 					{
-					case UP :
-						players[i].setY(players[i].getY() - delta * COEFF_DEPLACEMENT); 	
-					break;
-					case LEFT : 
-						players[i].setX(players[i].getX() - delta * COEFF_DEPLACEMENT); 
-					break;
-					case DOWN : 
-						players[i].setY(players[i].getY() + delta * COEFF_DEPLACEMENT); 
-					break;
-					case RIGHT : 
-						players[i].setX(players[i].getX() + delta * COEFF_DEPLACEMENT); 
-					break;
+						switch(direction)
+						{
+						case UP :
+							players[i].setY(players[i].getY() - delta * COEFF_DEPLACEMENT); 	
+						break;
+						case LEFT : 
+							players[i].setX(players[i].getX() - delta * COEFF_DEPLACEMENT); 
+						break;
+						case DOWN : 
+							players[i].setY(players[i].getY() + delta * COEFF_DEPLACEMENT); 
+						break;
+						case RIGHT : 
+							players[i].setX(players[i].getX() + delta * COEFF_DEPLACEMENT); 
+						break;
+						}
 					}
 				}
 			}
-			
 		}
 		// If player is in explosion
 		
@@ -674,50 +681,54 @@ public class Game extends BasicGameState implements Serializable{
 	private void drawBoard(Graphics g)
 	{
 		Image toDraw = null;
-		for(int i = 0 ; i < NB_CASE_HAUTEUR; i++)
+		if(plateau != null)
 		{
-			for(int j = 0 ; j < NB_CASE_LARGEUR ; j++)
+			for(int i = 0 ; i < NB_CASE_HAUTEUR; i++)
 			{
-					switch(plateau[i][j].getType())
-					{
-					case WALL:
-						toDraw = wall;
-						break;
-					case GROUND:
-						toDraw = ground;
-						break;
-					case GRASSGROUND:
-						toDraw = groundGrass;
-						break;
-					case INDESTRUCTIBLE:
-						toDraw = indestructible_wall;
-						break;
-					case HOUSE:
-						toDraw = house;
-						break;
-					case WOOD:
-						toDraw = wood;
-						break;
-					case GROUNDGRASSTEXAS:
-						toDraw = groundGrassTexas;
-						break;
-					case GROUNDTEXAS:
-						toDraw = groundTexas;
-						break;
-					case EMPTY:
-						toDraw = null;
-						break;
-					default:
-						toDraw = ground;
-						break;
-					}
+				for(int j = 0 ; j < NB_CASE_LARGEUR ; j++)
+				{
+						switch(plateau[i][j].getType())
+						{
+						case WALL:
+							toDraw = wall;
+							break;
+						case GROUND:
+							toDraw = ground;
+							break;
+						case GRASSGROUND:
+							toDraw = groundGrass;
+							break;
+						case INDESTRUCTIBLE:
+							toDraw = indestructible_wall;
+							break;
+						case HOUSE:
+							toDraw = house;
+							break;
+						case WOOD:
+							toDraw = wood;
+							break;
+						case GROUNDGRASSTEXAS:
+							toDraw = groundGrassTexas;
+							break;
+						case GROUNDTEXAS:
+							toDraw = groundTexas;
+							break;
+						case EMPTY:
+							toDraw = null;
+							break;
+						default:
+							toDraw = ground;
+							break;
+						}
 					if(toDraw != null && plateau != null)
-					g.drawImage(toDraw,plateau[i][j].getRealX(),plateau[i][j].getRealY());
+						g.drawImage(toDraw,plateau[i][j].getRealX(),plateau[i][j].getRealY());
 					else
 					{
 						g.setColor(new Color(240, 128, 0));
 						g.fillRect(plateau[i][j].getRealX(),plateau[i][j].getRealY() , TAILLE_CASE, TAILLE_CASE);
 					}
+				}
+		
 			}
 		}
 	}
@@ -955,5 +966,570 @@ public class Game extends BasicGameState implements Serializable{
 	public Player[] getPlayers()
 	{
 		return this.players;
+	}
+
+	public static int getNB_BOMB_AVAILABLE() {
+		return NB_BOMB_AVAILABLE;
+	}
+
+	public static void setNB_BOMB_AVAILABLE(int nB_BOMB_AVAILABLE) {
+		NB_BOMB_AVAILABLE = nB_BOMB_AVAILABLE;
+	}
+
+	public static int getNB_BOMB_ON_BOARD() {
+		return NB_BOMB_ON_BOARD;
+	}
+
+	public static void setNB_BOMB_ON_BOARD(int nB_BOMB_ON_BOARD) {
+		NB_BOMB_ON_BOARD = nB_BOMB_ON_BOARD;
+	}
+
+	public static int getLEVEL_START() {
+		return LEVEL_START;
+	}
+
+	public static void setLEVEL_START(int lEVEL_START) {
+		LEVEL_START = lEVEL_START;
+	}
+
+	public static int getLIFE_AVAILABLE() {
+		return LIFE_AVAILABLE;
+	}
+
+	public static void setLIFE_AVAILABLE(int lIFE_AVAILABLE) {
+		LIFE_AVAILABLE = lIFE_AVAILABLE;
+	}
+
+	public static int getNB_OBJECTIVE() {
+		return NB_OBJECTIVE;
+	}
+
+	public static void setNB_OBJECTIVE(int nB_OBJECTIVE) {
+		NB_OBJECTIVE = nB_OBJECTIVE;
+	}
+
+	public static float getCOEFF_DEPLACEMENT() {
+		return COEFF_DEPLACEMENT;
+	}
+
+	public static void setCOEFF_DEPLACEMENT(float cOEFF_DEPLACEMENT) {
+		COEFF_DEPLACEMENT = cOEFF_DEPLACEMENT;
+	}
+
+	public static int getTAILLE_EXPLOSION() {
+		return TAILLE_EXPLOSION;
+	}
+
+	public static void setTAILLE_EXPLOSION(int tAILLE_EXPLOSION) {
+		TAILLE_EXPLOSION = tAILLE_EXPLOSION;
+	}
+
+	public static int getCURRENT_TIME() {
+		return CURRENT_TIME;
+	}
+
+	public static void setCURRENT_TIME(int cURRENT_TIME) {
+		CURRENT_TIME = cURRENT_TIME;
+	}
+
+	public static int getS() {
+		return s;
+	}
+
+	public static void setS(int s) {
+		Game.s = s;
+	}
+
+	public static int getMin() {
+		return min;
+	}
+
+	public static void setMin(int min) {
+		Game.min = min;
+	}
+
+	public boolean isMoving() {
+		return isMoving;
+	}
+
+	public void setMoving(boolean isMoving) {
+		this.isMoving = isMoving;
+	}
+
+	public boolean isGameOver() {
+		return isGameOver;
+	}
+
+	public void setGameOver(boolean isGameOver) {
+		this.isGameOver = isGameOver;
+	}
+
+	public boolean isNewtorkGame() {
+		return isNewtorkGame;
+	}
+
+	public void setNewtorkGame(boolean isNewtorkGame) {
+		this.isNewtorkGame = isNewtorkGame;
+	}
+
+	public boolean isLevelFinished() {
+		return isLevelFinished;
+	}
+
+	public void setLevelFinished(boolean isLevelFinished) {
+		this.isLevelFinished = isLevelFinished;
+	}
+
+	public int getDirection() {
+		return direction;
+	}
+
+	public void setDirection(int direction) {
+		this.direction = direction;
+	}
+
+	public Case[][] getPlateau() {
+		return plateau;
+	}
+
+	public void setPlateau(Case[][] plateau) {
+		this.plateau = plateau;
+	}
+
+	public Image getWall() {
+		return wall;
+	}
+
+	public void setWall(Image wall) {
+		this.wall = wall;
+	}
+
+	public Image getGround() {
+		return ground;
+	}
+
+	public void setGround(Image ground) {
+		this.ground = ground;
+	}
+
+	public Image getIndestructible_wall() {
+		return indestructible_wall;
+	}
+
+	public void setIndestructible_wall(Image indestructible_wall) {
+		this.indestructible_wall = indestructible_wall;
+	}
+
+	public Image getGroundGrass() {
+		return groundGrass;
+	}
+
+	public void setGroundGrass(Image groundGrass) {
+		this.groundGrass = groundGrass;
+	}
+
+	public Image getHouse() {
+		return house;
+	}
+
+	public void setHouse(Image house) {
+		this.house = house;
+	}
+
+	public Image getWood() {
+		return wood;
+	}
+
+	public void setWood(Image wood) {
+		this.wood = wood;
+	}
+
+	public Image getGroundGrassTexas() {
+		return groundGrassTexas;
+	}
+
+	public void setGroundGrassTexas(Image groundGrassTexas) {
+		this.groundGrassTexas = groundGrassTexas;
+	}
+
+	public Image getGroundTexas() {
+		return groundTexas;
+	}
+
+	public void setGroundTexas(Image groundTexas) {
+		this.groundTexas = groundTexas;
+	}
+
+	public Image getHud() {
+		return hud;
+	}
+
+	public void setHud(Image hud) {
+		this.hud = hud;
+	}
+
+	public Image getTimer() {
+		return timer;
+	}
+
+	public void setTimer(Image timer) {
+		this.timer = timer;
+	}
+
+	public SpriteSheet getSheet() {
+		return sheet;
+	}
+
+	public void setSheet(SpriteSheet sheet) {
+		this.sheet = sheet;
+	}
+
+	public SpriteSheet getBombSheet() {
+		return bombSheet;
+	}
+
+	public void setBombSheet(SpriteSheet bombSheet) {
+		this.bombSheet = bombSheet;
+	}
+
+	public SpriteSheet getExplosionSheet() {
+		return explosionSheet;
+	}
+
+	public void setExplosionSheet(SpriteSheet explosionSheet) {
+		this.explosionSheet = explosionSheet;
+	}
+
+	public SpriteSheet getBonusSheet() {
+		return bonusSheet;
+	}
+
+	public void setBonusSheet(SpriteSheet bonusSheet) {
+		this.bonusSheet = bonusSheet;
+	}
+
+	public SpriteSheet getDeadSheet() {
+		return deadSheet;
+	}
+
+	public void setDeadSheet(SpriteSheet deadSheet) {
+		this.deadSheet = deadSheet;
+	}
+
+	public SpriteSheet getGroundSheet() {
+		return groundSheet;
+	}
+
+	public void setGroundSheet(SpriteSheet groundSheet) {
+		this.groundSheet = groundSheet;
+	}
+
+	public SpriteSheet getNumbers() {
+		return numbers;
+	}
+
+	public void setNumbers(SpriteSheet numbers) {
+		this.numbers = numbers;
+	}
+
+	public Image[] getCompteur() {
+		return compteur;
+	}
+
+	public void setCompteur(Image[] compteur) {
+		this.compteur = compteur;
+	}
+
+	public LinkedList<Bonus> getBonus() {
+		return bonus;
+	}
+
+	public void setBonus(LinkedList<Bonus> bonus) {
+		this.bonus = bonus;
+	}
+
+	public long getTempsExecution() {
+		return tempsExecution;
+	}
+
+	public void setTempsExecution(long tempsExecution) {
+		this.tempsExecution = tempsExecution;
+	}
+
+	public long getTempsAuLancement() {
+		return tempsAuLancement;
+	}
+
+	public void setTempsAuLancement(long tempsAuLancement) {
+		this.tempsAuLancement = tempsAuLancement;
+	}
+
+	public long getTimerStart() {
+		return timerStart;
+	}
+
+	public void setTimerStart(long timerStart) {
+		this.timerStart = timerStart;
+	}
+
+	public Random getRand() {
+		return rand;
+	}
+
+	public void setRand(Random rand) {
+		this.rand = rand;
+	}
+
+	public Sound getBonusSound() {
+		return bonusSound;
+	}
+
+	public void setBonusSound(Sound bonusSound) {
+		this.bonusSound = bonusSound;
+	}
+
+	public Sound getBombExplode() {
+		return bombExplode;
+	}
+
+	public void setBombExplode(Sound bombExplode) {
+		this.bombExplode = bombExplode;
+	}
+
+	public Sound getBackground() {
+		return background;
+	}
+
+	public void setBackground(Sound background) {
+		this.background = background;
+	}
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
+	public static int getUp() {
+		return UP;
+	}
+
+	public static int getLeft() {
+		return LEFT;
+	}
+
+	public static int getDown() {
+		return DOWN;
+	}
+
+	public static int getRight() {
+		return RIGHT;
+	}
+
+	public static int getLevelAtStart() {
+		return LEVEL_AT_START;
+	}
+
+	public static int getLifeAtStart() {
+		return LIFE_AT_START;
+	}
+
+	public static int getLargeurSprite() {
+		return LARGEUR_SPRITE;
+	}
+
+	public static int getHauteurSprite() {
+		return HAUTEUR_SPRITE;
+	}
+
+	public static int getLargeurNumber() {
+		return LARGEUR_NUMBER;
+	}
+
+	public static int getHauteurNumber() {
+		return HAUTEUR_NUMBER;
+	}
+
+	public static int getTailleBomb() {
+		return TAILLE_BOMB;
+	}
+
+	public static int getTailleCase() {
+		return TAILLE_CASE;
+	}
+
+	public static int getNbBombAtStart() {
+		return NB_BOMB_AT_START;
+	}
+
+	public static int getNbBombMaxi() {
+		return NB_BOMB_MAXI;
+	}
+
+	public static int getNbCaseHauteur() {
+		return NB_CASE_HAUTEUR;
+	}
+
+	public static int getNbCaseLargeur() {
+		return NB_CASE_LARGEUR;
+	}
+
+	public static int getTimegame() {
+		return TIMEGAME;
+	}
+
+	public static int getOffsetVerticalYLeftorright() {
+		return OFFSET_VERTICAL_Y_LEFTORRIGHT;
+	}
+
+	public static int getOffsetHorizontalXLeftorright() {
+		return OFFSET_HORIZONTAL_X_LEFTORRIGHT;
+	}
+
+	public static int getTIMER() {
+		return TIMER;
+	}
+
+	public static int getTimeToExplode() {
+		return TIME_TO_EXPLODE;
+	}
+
+	public static int getTimeToBonusAppear() {
+		return TIME_TO_BONUS_APPEAR;
+	}
+
+	public static int getTimeBeforeDissapear() {
+		return TIME_BEFORE_DISSAPEAR;
+	}
+
+	public static int getTimeBetweenBombMovement() {
+		return TIME_BETWEEN_BOMB_MOVEMENT;
+	}
+
+	public static int getNbBonus() {
+		return NB_BONUS;
+	}
+
+	public static int getTailleMortLargeur() {
+		return TAILLE_MORT_LARGEUR;
+	}
+
+	public static int getTailleMortHauteur() {
+		return TAILLE_MORT_HAUTEUR;
+	}
+
+	public static int getTailleExplodeMin() {
+		return TAILLE_EXPLODE_MIN;
+	}
+
+	public static String getBombadd() {
+		return BOMBADD;
+	}
+
+	public static String getSpeedup() {
+		return SPEEDUP;
+	}
+
+	public static String getMovebomb() {
+		return MOVEBOMB;
+	}
+
+	public static String getBoxe() {
+		return BOXE;
+	}
+
+	public static String getExplodemore() {
+		return EXPLODEMORE;
+	}
+
+	public static String getDead() {
+		return DEAD;
+	}
+
+	public static String getExplodeless() {
+		return EXPLODELESS;
+	}
+
+	public static String getBombless() {
+		return BOMBLESS;
+	}
+
+	public static String getSpeedless() {
+		return SPEEDLESS;
+	}
+
+	public static String getStopbomb() {
+		return STOPBOMB;
+	}
+
+	public static String getUnboxe() {
+		return UNBOXE;
+	}
+
+	public static String getLowdmg() {
+		return LOWDMG;
+	}
+
+	public static String getExplodelessefficient() {
+		return EXPLODELESSEFFICIENT;
+	}
+
+	public static String getLevel() {
+		return LEVEL;
+	}
+
+	public static String getWALL() {
+		return WALL;
+	}
+
+	public static String getGROUND() {
+		return GROUND;
+	}
+
+	public static String getGrassground() {
+		return GRASSGROUND;
+	}
+
+	public static String getIndestructible() {
+		return INDESTRUCTIBLE;
+	}
+
+	public static String getHOUSE() {
+		return HOUSE;
+	}
+
+	public static String getWOOD() {
+		return WOOD;
+	}
+
+	public static String getGroundgrasstexas() {
+		return GROUNDGRASSTEXAS;
+	}
+
+	public static String getGroundtexas() {
+		return GROUNDTEXAS;
+	}
+
+	public static String getEmpty() {
+		return EMPTY;
+	}
+
+	public static float getCoeffMax() {
+		return COEFF_MAX;
+	}
+
+	public static float getExplosionMax() {
+		return EXPLOSION_MAX;
+	}
+
+	public static float getCoeffMin() {
+		return COEFF_MIN;
+	}
+
+	public void setPlayers(Player[] players) {
+		this.players = players;
+	}
+	
+	public Game getInstance()
+	{
+		return this;
 	}
 }

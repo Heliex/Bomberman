@@ -4,8 +4,6 @@ import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.StateBasedGame;
 
-import Network.ConnexionToServer;
-
 public class Main extends StateBasedGame{
 
 	public static final int MENU = 0;
@@ -43,7 +41,11 @@ public class Main extends StateBasedGame{
 		// TODO Auto-generated method stub
 		this.addState(new Menu());
 		this.addState(new Game(false));
-		this.addState(new ConnexionToServer());
+		//this.addState(new ConnexionToServer());
 	}
-
+	
+	public Main getInstance()
+	{
+		return this;
+	}
 }

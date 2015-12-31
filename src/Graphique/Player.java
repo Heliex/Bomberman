@@ -48,6 +48,11 @@ public class Player implements Serializable{
 		mortAnim.addFrame(mort.getSprite(3, numColor), 100);
 	}
 	
+	public Player()
+	{
+		this.x = 0;
+		this.y = 0;
+	}
 	private Animation loadAnimation(SpriteSheet sheet,int startX,int endX , int y)
 	{
 		Animation animation = new Animation();
