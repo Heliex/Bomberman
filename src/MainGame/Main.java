@@ -4,6 +4,8 @@ import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.StateBasedGame;
 
+import Network.Client;
+
 public class Main extends StateBasedGame{
 
 	public static final int MENU = 0;
@@ -40,8 +42,8 @@ public class Main extends StateBasedGame{
 	public void initStatesList(GameContainer arg0) throws SlickException {
 		// TODO Auto-generated method stub
 		this.addState(new Menu());
-		this.addState(new Game(false));
-		//this.addState(new ConnexionToServer());
+		this.addState(new Game());
+		this.addState(new Client("127.0.0.1",4444));
 	}
 	
 	public Main getInstance()

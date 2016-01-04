@@ -64,7 +64,7 @@ public class Game extends BasicGameState implements Serializable{
 	private boolean isMoving = false,isGameOver = false, isNewtorkGame;
 	private boolean isLevelFinished;
 	private int direction = 0;
-	private Player[] players = new Player[Server.NB_MAX] ;
+	private Player[] players = new Player[Server.NB_CLIENT] ;
 	private Case[][] plateau;
 	transient private Image wall,ground,indestructible_wall,groundGrass, house, wood, groundGrassTexas,groundTexas,hud,timer;
 	transient private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet,numbers;
@@ -77,6 +77,24 @@ public class Game extends BasicGameState implements Serializable{
 	
 	public Game()
 	{
+		isLevelFinished = false;
+		isGameOver = false;
+		// Initialize board
+		plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
+		bonus = new LinkedList<Bonus>();
+		// Initialize level
+		File level = new File("niveaux/" + LEVEL + LEVEL_START+ ".txt");
+		initLevel(level);
+				
+		// Initialize timer
+		timerStart = Bomb.getTime();
+		
+		NB_BOMB_AVAILABLE = NB_BOMB_AT_START;
+		COEFF_DEPLACEMENT = COEFF_MIN;
+		TAILLE_EXPLOSION = TAILLE_EXPLODE_MIN;
+		CURRENT_TIME = TIMEGAME;
+		min = ((TIMEGAME/TIMER) % 3600) / 60;
+		s = (TIMEGAME/TIMER) % 60 ;
 	}
 	
 	public Game(boolean network)
@@ -84,10 +102,11 @@ public class Game extends BasicGameState implements Serializable{
 		isNewtorkGame = network;
 	}
 	
-	public void initialisation() throws SlickException
+	// This is method is called when windows is opening
+	@Override
+	public void init(GameContainer gc,StateBasedGame game) throws SlickException
 	{
-		isLevelFinished = false;
-		isGameOver = false;
+		
 		// Initialize SpriteSheet
 		sheet = new SpriteSheet("images/Deplacements.png",LARGEUR_SPRITE,HAUTEUR_SPRITE);
 		bombSheet = new SpriteSheet("images/Bombe.png",TAILLE_BOMB,TAILLE_BOMB);
@@ -129,35 +148,12 @@ public class Game extends BasicGameState implements Serializable{
 		players[3] = new Player(sheet,3,(NB_CASE_LARGEUR - 1) * TAILLE_CASE,(NB_CASE_HAUTEUR - 1) * TAILLE_CASE,deadSheet);
 		if(!isNewtorkGame)
 			players[0].setDrawable(true);
-		// Initialize board
-		plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
-		bonus = new LinkedList<Bonus>();
+	
 		
 		// Initialize song
 		bonusSound = new Sound("sons/ramasserBonus.wav");
 		bombExplode = new Sound("sons/bombExplode.wav");
 		background = new Sound("sons/builtToFall.wav");
-		
-		// Initialize level
-		File level = new File("niveaux/" + LEVEL + LEVEL_START+ ".txt");
-		initLevel(level);
-		
-		// Initialize timer
-		timerStart = Bomb.getTime();
-		
-		NB_BOMB_AVAILABLE = NB_BOMB_AT_START;
-		COEFF_DEPLACEMENT = COEFF_MIN;
-		TAILLE_EXPLOSION = TAILLE_EXPLODE_MIN;
-		CURRENT_TIME = TIMEGAME;
-		min = ((TIMEGAME/TIMER) % 3600) / 60;
-		s = (TIMEGAME/TIMER) % 60 ;
-	}
-	
-	// This is method is called when windows is opening
-	@Override
-	public void init(GameContainer gc,StateBasedGame game) throws SlickException
-	{
-		initialisation();
 	}
 	
 	// This method is called on some interval
@@ -174,39 +170,7 @@ public class Game extends BasicGameState implements Serializable{
 			g.setBackground(new Color(255,255,255,.5f));
 			// Draw Board
 			drawBoard(g);
-			for(int i = 0 ; i < Server.NB_MAX ; i++)
-			{
-				if(players[i] != null)
-				{
-					if(players[i].isDrawable())
-					{
-						// Draw All Bombe And Explosion
-						drawArray(players[i].getBombe(),g);
-						drawExplosion(players[i].getBombe(),g);
-						drawBonus(bonus,g);
-						
-						// Check if bomberman walk on bonus
-						checkBonus(players[i]);
-						tempsExecution = Bomb.getTime();
-						// Draw Animation
-						if(players[i].isDeadDrawable())
-						{
-							g.drawAnimation(players[i].getDead(), players[i].getX(), players[i].getY());
-							if(players[i].getDead().getFrame() == 3)
-							{
-								LIFE_AVAILABLE--;
-								init(gc, game);
-							}
-							
-						}
-						else
-						{
-							g.drawAnimation(players[i].getAnimation(direction + ( isMoving ? 4 : 0)), players[i].getX(), players[i].getY());
-						}
-					}
-				}
-			}
-			
+			drawPlayers(g,gc,game);
 			// Draw Hud and timer
 			if(hud != null && compteur[LIFE_AVAILABLE] != null && timer != null && compteur[min] != null)
 			{
@@ -256,7 +220,7 @@ public class Game extends BasicGameState implements Serializable{
 			init(gc,game);
 			
 		}
-		for(int i = 0 ; i < Server.NB_MAX ; i++)
+		for(int i = 0 ; i < Server.NB_CLIENT ; i++)
 		{
 			if(players[i] != null)
 			{
@@ -367,6 +331,46 @@ public class Game extends BasicGameState implements Serializable{
 		}	
 	}
 	
+	public void drawPlayers(Graphics g,GameContainer gc,StateBasedGame game)
+	{
+		for(int i = 0 ; i < Server.NB_CLIENT ; i++)
+		{
+			if(players[i] != null)
+			{
+				if(players[i].isDrawable())
+				{
+					// Draw All Bombe And Explosion
+					drawArray(players[i].getBombe(),g);
+					drawExplosion(players[i].getBombe(),g);
+					drawBonus(bonus,g);
+					
+					// Check if bomberman walk on bonus
+					checkBonus(players[i]);
+					tempsExecution = Bomb.getTime();
+					// Draw Animation
+					if(players[i].isDeadDrawable())
+					{
+						g.drawAnimation(players[i].getDead(), players[i].getX(), players[i].getY());
+						if(players[i].getDead().getFrame() == 3)
+						{
+							LIFE_AVAILABLE--;
+							try {
+								init(gc, game);
+							} catch (SlickException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						
+					}
+					else
+					{
+						g.drawAnimation(players[i].getAnimation(direction + ( isMoving ? 4 : 0)), players[i].getX(), players[i].getY());
+					}
+				}
+			}
+		}
+	}
 	// Catch key pressed events
 	@Override
 	public void keyPressed(int key, char c)
@@ -620,7 +624,7 @@ public class Game extends BasicGameState implements Serializable{
 	
 	
 	
-	private void initLevel(File f)
+	public void initLevel(File f)
 	{
 		// Read the level file
 				try {
@@ -678,7 +682,7 @@ public class Game extends BasicGameState implements Serializable{
 	}
 	
 	// Draw the board 
-	private void drawBoard(Graphics g)
+	public void drawBoard(Graphics g)
 	{
 		Image toDraw = null;
 		if(plateau != null)
@@ -734,73 +738,79 @@ public class Game extends BasicGameState implements Serializable{
 	}
 	
 	// Draw bomb
-	private void drawArray(LinkedList<Bomb> array,Graphics g)
+	public void drawArray(LinkedList<Bomb> array,Graphics g)
 	{
-		for(int i = 0 ; i < array.size(); i++)
+		if(array != null)
 		{
-			if(array.get(i) != null)
+			for(int i = 0 ; i < array.size(); i++)
 			{
-				if (Bomb.getTime() - array.get(i).getFirstTime()  > TIME_TO_EXPLODE)
+				if(array.get(i) != null)
 				{
-					bombExplode.play();
-					Case c = getCaseFromCoord(array.get(i).getXBomb(),array.get(i).getYBomb());
-					plateau[c.getY()][c.getX()].setHasBombe(false);
-					array.get(i).setDrawable(false);
-					array.get(i).setFirstTime(Bomb.getTime());
-					if(array.get(i).getExplosion() != null)
+					if (Bomb.getTime() - array.get(i).getFirstTime()  > TIME_TO_EXPLODE)
 					{
-						array.get(i).getExplosion().setDrawable(true);
+						bombExplode.play();
+						Case c = getCaseFromCoord(array.get(i).getXBomb(),array.get(i).getYBomb());
+						plateau[c.getY()][c.getX()].setHasBombe(false);
+						array.get(i).setDrawable(false);
+						array.get(i).setFirstTime(Bomb.getTime());
+						if(array.get(i).getExplosion() != null)
+						{
+							array.get(i).getExplosion().setDrawable(true);
+						}
 					}
-				}
-				else if(array.get(i).isDrawable())
-				{
-					g.drawAnimation(array.get(i).getAnimation(),array.get(i).getXBomb(),array.get(i).getYBomb());
-					
+					else if(array.get(i).isDrawable())
+					{
+						g.drawAnimation(array.get(i).getAnimation(),array.get(i).getXBomb(),array.get(i).getYBomb());
+						
+					}
 				}
 			}
 		}
 	}
 	
 	// Draw explosion
-	private void drawExplosion(LinkedList<Bomb> array,Graphics g)
+	public void drawExplosion(LinkedList<Bomb> array,Graphics g)
 	{
-		for(int i = 0 ; i< array.size(); i++)
+		if(array != null)
 		{
-			if(array.get(i) != null)
+			for(int i = 0 ; i< array.size(); i++)
 			{
-				if(array.get(i).getExplosion() != null)
+				if(array.get(i) != null)
 				{
-					if(array.get(i).getExplosion().getAnimation(i).getFrame() == 4 && array.get(i).getExplosion().isDrawable())
+					if(array.get(i).getExplosion() != null)
 					{
-						array.removeFirst();
-					}
-					else if(array.get(i).getExplosion().isDrawable())
-					{
-						
-						if(isGameOver)
+						if(array.get(i).getExplosion().getAnimation(i).getFrame() == 4 && array.get(i).getExplosion().isDrawable())
+						{
+							array.removeFirst();
+						}
+						else if(array.get(i).getExplosion().isDrawable())
 						{
 							
-						}
-						else
-						{
-							for(int j = 0 ; j < TAILLE_EXPLOSION ; j++)
+							if(isGameOver)
 							{
 								
-								canRemove(array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_CASE*j);
-								canRemove(array.get(i).getXBomb()+ TAILLE_CASE*j,array.get(i).getYBomb());
-								canRemove(array.get(i).getXBomb(),array.get(i).getYBomb() - TAILLE_CASE*j);
-								canRemove(array.get(i).getXBomb() - TAILLE_CASE*j,array.get(i).getYBomb());
-								g.drawAnimation(array.get(i).getExplosion().getAnimation()[1], array.get(i).getXBomb() - TAILLE_BOMB*j, array.get(i).getYBomb());
-								g.drawAnimation(array.get(i).getExplosion().getAnimation()[3], array.get(i).getXBomb() + TAILLE_BOMB*j, array.get(i).getYBomb());
-								g.drawAnimation(array.get(i).getExplosion().getAnimation()[5], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_BOMB*j);
-								g.drawAnimation(array.get(i).getExplosion().getAnimation()[7], array.get(i).getXBomb(), array.get(i).getYBomb() + TAILLE_BOMB*j);
 							}
-							g.drawAnimation(array.get(i).getExplosion().getAnimation()[0], array.get(i).getXBomb(),array.get(i).getYBomb());
-							g.drawAnimation(array.get(i).getExplosion().getAnimation()[2], array.get(i).getXBomb() - TAILLE_BOMB * TAILLE_EXPLOSION, array.get(i).getYBomb());
-							g.drawAnimation(array.get(i).getExplosion().getAnimation()[4], array.get(i).getXBomb() + TAILLE_BOMB * TAILLE_EXPLOSION, array.get(i).getYBomb());
-							g.drawAnimation(array.get(i).getExplosion().getAnimation()[6], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_BOMB * TAILLE_EXPLOSION);
-							g.drawAnimation(array.get(i).getExplosion().getAnimation()[8], array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_BOMB * TAILLE_EXPLOSION );
-						}	
+							else
+							{
+								for(int j = 0 ; j < TAILLE_EXPLOSION ; j++)
+								{
+									
+									canRemove(array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_CASE*j);
+									canRemove(array.get(i).getXBomb()+ TAILLE_CASE*j,array.get(i).getYBomb());
+									canRemove(array.get(i).getXBomb(),array.get(i).getYBomb() - TAILLE_CASE*j);
+									canRemove(array.get(i).getXBomb() - TAILLE_CASE*j,array.get(i).getYBomb());
+									g.drawAnimation(array.get(i).getExplosion().getAnimation()[1], array.get(i).getXBomb() - TAILLE_BOMB*j, array.get(i).getYBomb());
+									g.drawAnimation(array.get(i).getExplosion().getAnimation()[3], array.get(i).getXBomb() + TAILLE_BOMB*j, array.get(i).getYBomb());
+									g.drawAnimation(array.get(i).getExplosion().getAnimation()[5], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_BOMB*j);
+									g.drawAnimation(array.get(i).getExplosion().getAnimation()[7], array.get(i).getXBomb(), array.get(i).getYBomb() + TAILLE_BOMB*j);
+								}
+								g.drawAnimation(array.get(i).getExplosion().getAnimation()[0], array.get(i).getXBomb(),array.get(i).getYBomb());
+								g.drawAnimation(array.get(i).getExplosion().getAnimation()[2], array.get(i).getXBomb() - TAILLE_BOMB * TAILLE_EXPLOSION, array.get(i).getYBomb());
+								g.drawAnimation(array.get(i).getExplosion().getAnimation()[4], array.get(i).getXBomb() + TAILLE_BOMB * TAILLE_EXPLOSION, array.get(i).getYBomb());
+								g.drawAnimation(array.get(i).getExplosion().getAnimation()[6], array.get(i).getXBomb(), array.get(i).getYBomb() - TAILLE_BOMB * TAILLE_EXPLOSION);
+								g.drawAnimation(array.get(i).getExplosion().getAnimation()[8], array.get(i).getXBomb(),array.get(i).getYBomb() + TAILLE_BOMB * TAILLE_EXPLOSION );
+							}	
+						}
 					}
 				}
 			}
@@ -814,7 +824,7 @@ public class Game extends BasicGameState implements Serializable{
 	}
 	
 	// Can remove wall ( when a bomb explode)
-	private void canRemove(float x, float y)
+	public void canRemove(float x, float y)
 	{
 		Case c = getCaseFromCoord(x, y);
 		if(c != null && c.getType() == WALL)
@@ -824,7 +834,7 @@ public class Game extends BasicGameState implements Serializable{
 	}
 	
 	// Drawing bonus
-	private void drawBonus(LinkedList<Bonus> bonus , Graphics g)
+	public void drawBonus(LinkedList<Bonus> bonus , Graphics g)
 	{
 		for(int i = 0 ; i < bonus.size() ; i++)
 		{
@@ -847,7 +857,7 @@ public class Game extends BasicGameState implements Serializable{
 	}
 	
 	// Check if a bonus is where the player moves
-	private void checkBonus(Player p)
+	public void checkBonus(Player p)
 	{
 		Case c = getCaseFromCoord(p.getX() + OFFSET_HORIZONTAL_X_LEFTORRIGHT/2, p.getY() + OFFSET_VERTICAL_Y_LEFTORRIGHT/2);
 		for(int i = 0 ; i < bonus.size() ; i++)
