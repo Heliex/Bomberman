@@ -5,14 +5,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import MainGame.Game;
-
 public class CommunicationAvecServeur implements Runnable{
 	private Socket client;
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
 	private int delta = 0 ;
-	private Game game;
 	
 	public CommunicationAvecServeur(Socket socket) {
 		this.client = socket;
@@ -42,36 +39,36 @@ public class CommunicationAvecServeur implements Runnable{
 					String commande = tab[1];
 					System.out.println("Numéro du joueur : " + numPlayer);
 					System.out.println("Commande recu : " + commande);
-					if(game != null)
+					if(Server.game != null)
 					{
 						switch(commande)
 						{
 							case "UP":
-								if(game.canMove(game.getPlayers()[numPlayer], getDirection("UP"),numPlayer))
+								if(Server.game.canMove(Server.game.getPlayers()[numPlayer], getDirection("UP"),numPlayer))
 								{
 									System.out.println("Le joueur peux monter");
-									game.getPlayers()[numPlayer].setY(game.getPlayers()[numPlayer].getY() - delta);
+									Server.game.getPlayers()[numPlayer].setY(Server.game.getPlayers()[numPlayer].getY() - delta);
 								}
 							break;
 							
 							case "LEFT":
-								if(game.canMove(game.getPlayers()[numPlayer], getDirection("LEFT"),numPlayer))
+								if(Server.game.canMove(Server.game.getPlayers()[numPlayer], getDirection("LEFT"),numPlayer))
 								{
-									game.getPlayers()[numPlayer].setX(game.getPlayers()[numPlayer].getY() - delta);
+									Server.game.getPlayers()[numPlayer].setX(Server.game.getPlayers()[numPlayer].getY() - delta);
 								}
 							break;
 							
 							case "DOWN":
-								if(game.canMove(game.getPlayers()[numPlayer], getDirection("DOWN"),numPlayer))
+								if(Server.game.canMove(Server.game.getPlayers()[numPlayer], getDirection("DOWN"),numPlayer))
 								{
-									game.getPlayers()[numPlayer].setY(game.getPlayers()[numPlayer].getY() + delta);
+									Server.game.getPlayers()[numPlayer].setY(Server.game.getPlayers()[numPlayer].getY() + delta);
 								}
 							break;
 							
 							case "RIGHT":
-								if(game.canMove(game.getPlayers()[numPlayer], getDirection("RIGHT"),numPlayer))
+								if(Server.game.canMove(Server.game.getPlayers()[numPlayer], getDirection("RIGHT"),numPlayer))
 								{
-									game.getPlayers()[numPlayer].setX(game.getPlayers()[numPlayer].getY() + delta);
+									Server.game.getPlayers()[numPlayer].setX(Server.game.getPlayers()[numPlayer].getY() + delta);
 								}
 							break;
 						}
@@ -80,11 +77,6 @@ public class CommunicationAvecServeur implements Runnable{
 				else if(o instanceof Integer)
 				{
 					delta = (int)o;
-				}
-				else if(o instanceof Game)
-				{
-					game = (Game)o;
-					Server.broadCast(game);
 				}
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block

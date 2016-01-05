@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import Graphique.Bomb;
 import MainGame.Game;
 
 public class Server {
@@ -13,8 +14,10 @@ public class Server {
 	public static final int NB_CLIENT = 4;
 	public static int NB_CLIENT_CONNECTED = 0;
 	public static CommunicationAvecServeur[] listeClients = new CommunicationAvecServeur[NB_CLIENT];
-	private Game game;
+	public static  Game game;
 	private boolean isInit = false;
+	private long  TIMER_AT_START = 0, TIMER_EXECUTION = 0;
+	private final static long TICK = 128;
 	public static void main(String[] args)
 	{
 		new Server(4444);
@@ -25,7 +28,7 @@ public class Server {
 	{
 		this.port = port;
 		try {
-			this.game = new Game();
+			game = new Game(true);
 			System.out.println("Mise en route du serveur...");
 			this.serverSocket = new ServerSocket(port);
 			System.out.println("Serveur démarré....");
@@ -47,6 +50,23 @@ public class Server {
 					isInit = true;
 					broadCast(game);
 				}
+				if(isInit)
+				{
+					if(game.getTempsExecution() - game.getTimerStart() > Game.getTIMER())
+					{
+						Game.setCURRENT_TIME(Game.getCURRENT_TIME() - Game.getTIMER());
+						Game.setS((Game.getCURRENT_TIME()/Game.getTIMER()) % 60);
+						Game.setMin(((Game.getCURRENT_TIME()/Game.getTIMER()) % 3600 ) / 60);
+						game.setTimerStart(Bomb.getTime());
+					}
+					TIMER_EXECUTION = Bomb.getTime();
+					if(TIMER_EXECUTION - TIMER_AT_START > TICK)
+					{
+						broadCast(game);
+						TIMER_AT_START=Bomb.getTime();
+					}
+				}
+					
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -74,15 +94,5 @@ public class Server {
 				}
 			}	
 		}
-	}
-	
-	public void setGame(Game game)
-	{
-		this.game = game;
-	}
-	
-	public Game getGame()
-	{
-		return this.game;
 	}
 }

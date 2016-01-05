@@ -70,7 +70,7 @@ public class Game extends BasicGameState implements Serializable{
 	transient private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet,numbers;
 	transient private Image[] compteur = new Image[10];
 	private LinkedList<Bonus> bonus ;
-	private long tempsExecution = 0,tempsAuLancement = 0,timerStart=0;
+	private static long tempsExecution = 0,tempsAuLancement = 0,timerStart=0;
 	private Random rand ;
 	transient private Sound bonusSound,bombExplode, background;
 	private int numPlayer = 0;
@@ -85,7 +85,7 @@ public class Game extends BasicGameState implements Serializable{
 		// Initialize level
 		File level = new File("niveaux/" + LEVEL + LEVEL_START+ ".txt");
 		initLevel(level);
-				
+		rand = new Random();
 		// Initialize timer
 		timerStart = Bomb.getTime();
 		
@@ -99,6 +99,24 @@ public class Game extends BasicGameState implements Serializable{
 	
 	public Game(boolean network)
 	{
+		isLevelFinished = false;
+		isGameOver = false;
+		// Initialize board
+		plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
+		bonus = new LinkedList<Bonus>();
+		// Initialize level
+		File level = new File("niveaux/" + LEVEL + LEVEL_START+ ".txt");
+		initLevel(level);
+		rand = new Random();
+		// Initialize timer
+		timerStart = Bomb.getTime();
+		
+		NB_BOMB_AVAILABLE = NB_BOMB_AT_START;
+		COEFF_DEPLACEMENT = COEFF_MIN;
+		TAILLE_EXPLOSION = TAILLE_EXPLODE_MIN;
+		CURRENT_TIME = TIMEGAME;
+		min = ((TIMEGAME/TIMER) % 3600) / 60;
+		s = (TIMEGAME/TIMER) % 60 ;
 		isNewtorkGame = network;
 	}
 	
@@ -138,7 +156,6 @@ public class Game extends BasicGameState implements Serializable{
 		compteur[7] = numbers.getSprite(7, 0);
 		compteur[8] = numbers.getSprite(8, 0);
 		compteur[9] = numbers.getSprite(9, 0);
-		rand = new Random();
 		tempsAuLancement = Bomb.getTime();
 		
 		// Initialize Player
@@ -206,20 +223,24 @@ public class Game extends BasicGameState implements Serializable{
 	@Override
 	public void update(GameContainer gc,StateBasedGame game, int delta) throws SlickException
 	{
-		if(tempsExecution - timerStart > TIMER) // Modify count here
+		if(!isNewtorkGame)
 		{
-			CURRENT_TIME -= TIMER;
-			s = (CURRENT_TIME/TIMER) % 60;
-			min = ((CURRENT_TIME/TIMER) % 3600 ) / 60;
-			timerStart = Bomb.getTime();
+			if(tempsExecution - timerStart > TIMER) // Modify count here
+			{
+				CURRENT_TIME -= TIMER;
+				s = (CURRENT_TIME/TIMER) % 60;
+				min = ((CURRENT_TIME/TIMER) % 3600 ) / 60;
+				timerStart = Bomb.getTime();
+			}
+			if(s == 0 && min == 0)
+			{
+				isGameOver= true;
+				LIFE_AVAILABLE--;
+				init(gc,game);
+				
+			}
 		}
-		if(s == 0 && min == 0)
-		{
-			isGameOver= true;
-			LIFE_AVAILABLE--;
-			init(gc,game);
-			
-		}
+		
 		for(int i = 0 ; i < Server.NB_CLIENT ; i++)
 		{
 			if(players[i] != null)
@@ -1262,24 +1283,24 @@ public class Game extends BasicGameState implements Serializable{
 		return tempsExecution;
 	}
 
-	public void setTempsExecution(long tempsExecution) {
-		this.tempsExecution = tempsExecution;
+	public void setTempsExecution(long tps) {
+		tempsExecution = tps;
 	}
 
 	public long getTempsAuLancement() {
 		return tempsAuLancement;
 	}
 
-	public void setTempsAuLancement(long tempsAuLancement) {
-		this.tempsAuLancement = tempsAuLancement;
+	public void setTempsAuLancement(long temps) {
+		tempsAuLancement = temps;
 	}
 
 	public long getTimerStart() {
 		return timerStart;
 	}
 
-	public void setTimerStart(long timerStart) {
-		this.timerStart = timerStart;
+	public void setTimerStart(long timer) {
+		timerStart = timer;
 	}
 
 	public Random getRand() {

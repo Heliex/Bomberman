@@ -20,7 +20,8 @@ public class Player implements Serializable{
 	transient private Animation mortAnim;
 	float x, y;
 	transient private LinkedList<Bomb> bomb = new LinkedList<>();
-	private boolean canMoveBomb,isDeadDrawable,canPushPlayer,isDrawable;
+	private boolean canMoveBomb,isDeadDrawable,canPushPlayer,isDrawable,isMoving;
+	private int direction;
 	
 	public Player(SpriteSheet sheet,int numColor,float x, float y,SpriteSheet mort)
 	{
@@ -28,6 +29,8 @@ public class Player implements Serializable{
 		this.isDeadDrawable = false;
 		this.canPushPlayer = false;
 		this.numColor = numColor;
+		this.direction = 0;
+		this.isMoving = false;
 		this.mort = mort;
 		this.x = x ;
 		this.y = y;
@@ -72,6 +75,26 @@ public class Player implements Serializable{
 	public Animation[] getAllAnimation()
 	{
 		return this.animations;
+	}
+	
+	public int getDirection()
+	{
+		return this.direction;
+	}
+	
+	public void setDirection(int direction)
+	{
+		this.direction = direction;
+	}
+	
+	public boolean isMoving()
+	{
+		return this.isMoving;
+	}
+	
+	public void setMoving(boolean moving)
+	{
+		this.isMoving = moving;
 	}
 	
 	public float getX()
