@@ -28,7 +28,6 @@ public class Client extends BasicGameState{
 	private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet,numbers;
 	private Image[] compteur = new Image[10];
 	private Sound bonusSound,bombExplode, background;
-	private boolean hasBeenSet = false;
 	private Player[] players = new Player[Server.NB_CLIENT];
 	
 	public Client(String host, int port)
