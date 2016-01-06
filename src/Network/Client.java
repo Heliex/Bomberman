@@ -128,6 +128,7 @@ public class Client extends BasicGameState{
 		// TODO Auto-generated method stub
 		if(game != null)
 		{
+			game.setBackground(background);
 			game.setSheet(sheet);
 			game.setBombSheet(bombSheet);
 			game.setExplosionSheet(explosionSheet);

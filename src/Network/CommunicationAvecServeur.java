@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+
 public class CommunicationAvecServeur implements Runnable{
 	private Socket client;
 	private ObjectInputStream in;

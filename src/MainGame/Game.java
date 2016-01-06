@@ -177,7 +177,7 @@ public class Game extends BasicGameState implements Serializable{
 	@Override
 	public void render(GameContainer gc,StateBasedGame game, Graphics g) throws SlickException // Render
 	{
-			if(background != null)
+			if(background != null && !isNewtorkGame)
 			{
 				if(!background.playing())
 				{
