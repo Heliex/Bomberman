@@ -240,117 +240,114 @@ public class Game extends BasicGameState implements Serializable{
 				init(gc,game);
 				
 			}
-		}
-		
-		for(int i = 0 ; i < Server.NB_CLIENT ; i++)
-		{
-			if(players[i] != null)
+			for(int i = 0 ; i < Server.NB_CLIENT ; i++)
 			{
-				if(players[i].isInExplosion() && players[i].isDrawable())
+				if(players[i] != null)
 				{
-					players[i].setIsDeadDrawable(true);
-				}
-				// Check if you can move before move
-				if(canMove(players[i],direction,delta) && players[i].isDrawable())
-				{
-					if(this.isMoving)
+					if(players[i].isInExplosion() && players[i].isDrawable())
 					{
-						switch(direction)
+						players[i].setIsDeadDrawable(true);
+					}
+					// Check if you can move before move
+					if(canMove(players[i],direction,delta) && players[i].isDrawable())
+					{
+						if(players[i].isMoving())
 						{
-						case UP :
-							players[i].setY(players[i].getY() - delta * COEFF_DEPLACEMENT); 	
-						break;
-						case LEFT : 
-							players[i].setX(players[i].getX() - delta * COEFF_DEPLACEMENT); 
-						break;
-						case DOWN : 
-							players[i].setY(players[i].getY() + delta * COEFF_DEPLACEMENT); 
-						break;
-						case RIGHT : 
-							players[i].setX(players[i].getX() + delta * COEFF_DEPLACEMENT); 
-						break;
+							switch(players[i].getDirection())
+							{
+							case UP :
+								players[i].setY(players[i].getY() - delta * COEFF_DEPLACEMENT); 	
+							break;
+							case LEFT : 
+								players[i].setX(players[i].getX() - delta * COEFF_DEPLACEMENT); 
+							break;
+							case DOWN : 
+								players[i].setY(players[i].getY() + delta * COEFF_DEPLACEMENT); 
+							break;
+							case RIGHT : 
+								players[i].setX(players[i].getX() + delta * COEFF_DEPLACEMENT); 
+							break;
+							}
 						}
 					}
 				}
 			}
+			
+			if(tempsExecution - tempsAuLancement > TIME_TO_BONUS_APPEAR)
+			{
+				new Thread(new Runnable(){
+					public void run()
+					{
+						int index = rand.nextInt(NB_BONUS);
+						switch(index)
+						{
+						case 0:
+							bonus.add(new Bonus(BOMBADD,bonusSheet.getSprite(0, 0)));
+							break;
+						case 1:
+							bonus.add(new Bonus(SPEEDUP,bonusSheet.getSprite(1,0)));
+							break;
+						case 2:
+							bonus.add(new Bonus(MOVEBOMB,bonusSheet.getSprite(2, 0)));
+							break;
+						case 3:
+							bonus.add(new Bonus(BOXE,bonusSheet.getSprite(3,0)));
+							break;
+						case 4:
+						case 13:
+							bonus.add(new Bonus(EXPLODEMORE,bonusSheet.getSprite(4,0)));
+							break;
+						case 5:
+							bonus.add(new Bonus(DEAD,bonusSheet.getSprite(5, 0)));
+							break;
+						case 6:
+							bonus.add(new Bonus(EXPLODELESS,bonusSheet.getSprite(6, 0)));
+							break;
+						case 7:
+							bonus.add(new Bonus(BOMBLESS,bonusSheet.getSprite(0, 1)));
+							break;
+						case 8:
+							bonus.add(new Bonus(SPEEDLESS,bonusSheet.getSprite(1, 1)));
+							break;
+						case 9:
+							bonus.add(new Bonus(STOPBOMB,bonusSheet.getSprite(2, 1)));
+							break;
+						case 10:
+							bonus.add(new Bonus(UNBOXE,bonusSheet.getSprite(3, 1)));
+							break;
+						case 11:
+							bonus.add(new Bonus(EXPLODELESSEFFICIENT,bonusSheet.getSprite(4, 1)));
+							break;
+						case 12:
+							bonus.add(new Bonus(LOWDMG,bonusSheet.getSprite(5, 1)));
+							break;
+						default:
+							break;
+						}
+						int x = rand.nextInt(NB_CASE_LARGEUR);
+						int y = rand.nextInt(NB_CASE_HAUTEUR);
+						Case c = plateau[y][x];
+						while(c.getType() == "WALL" || c.getType() == "INDESTRUCTIBLE" || c.getY() == 0)
+						{
+							x = rand.nextInt(NB_CASE_LARGEUR);
+							y = rand.nextInt(NB_CASE_HAUTEUR);
+							c = plateau[y][x];
+						}
+						plateau[y][x].setHasbonus(true);
+						if(bonus.size() > 0)
+						{
+							bonus.getLast().setDrawable(true);
+							bonus.getLast().setX(c.getX());
+							bonus.getLast().setY(c.getY());
+						}
+						
+						
+						rand = new Random();
+					}
+				}).start();
+				tempsAuLancement = Bomb.getTime();
+			}	
 		}
-		// If player is in explosion
-		
-		// Add random bonus on map at every interval
-		if(tempsExecution - tempsAuLancement > TIME_TO_BONUS_APPEAR)
-		{
-			new Thread(new Runnable(){
-				public void run()
-				{
-					int index = rand.nextInt(NB_BONUS);
-					switch(index)
-					{
-					case 0:
-						bonus.add(new Bonus(BOMBADD,bonusSheet.getSprite(0, 0)));
-						break;
-					case 1:
-						bonus.add(new Bonus(SPEEDUP,bonusSheet.getSprite(1,0)));
-						break;
-					case 2:
-						bonus.add(new Bonus(MOVEBOMB,bonusSheet.getSprite(2, 0)));
-						break;
-					case 3:
-						bonus.add(new Bonus(BOXE,bonusSheet.getSprite(3,0)));
-						break;
-					case 4:
-					case 13:
-						bonus.add(new Bonus(EXPLODEMORE,bonusSheet.getSprite(4,0)));
-						break;
-					case 5:
-						bonus.add(new Bonus(DEAD,bonusSheet.getSprite(5, 0)));
-						break;
-					case 6:
-						bonus.add(new Bonus(EXPLODELESS,bonusSheet.getSprite(6, 0)));
-						break;
-					case 7:
-						bonus.add(new Bonus(BOMBLESS,bonusSheet.getSprite(0, 1)));
-						break;
-					case 8:
-						bonus.add(new Bonus(SPEEDLESS,bonusSheet.getSprite(1, 1)));
-						break;
-					case 9:
-						bonus.add(new Bonus(STOPBOMB,bonusSheet.getSprite(2, 1)));
-						break;
-					case 10:
-						bonus.add(new Bonus(UNBOXE,bonusSheet.getSprite(3, 1)));
-						break;
-					case 11:
-						bonus.add(new Bonus(EXPLODELESSEFFICIENT,bonusSheet.getSprite(4, 1)));
-						break;
-					case 12:
-						bonus.add(new Bonus(LOWDMG,bonusSheet.getSprite(5, 1)));
-						break;
-					default:
-						break;
-					}
-					int x = rand.nextInt(NB_CASE_LARGEUR);
-					int y = rand.nextInt(NB_CASE_HAUTEUR);
-					Case c = plateau[y][x];
-					while(c.getType() == "WALL" || c.getType() == "INDESTRUCTIBLE" || c.getY() == 0)
-					{
-						x = rand.nextInt(NB_CASE_LARGEUR);
-						y = rand.nextInt(NB_CASE_HAUTEUR);
-						c = plateau[y][x];
-					}
-					plateau[y][x].setHasbonus(true);
-					if(bonus.size() > 0)
-					{
-						bonus.getLast().setDrawable(true);
-						bonus.getLast().setX(c.getX());
-						bonus.getLast().setY(c.getY());
-					}
-					
-					
-					rand = new Random();
-				}
-			}).start();
-			tempsAuLancement = Bomb.getTime();
-		}	
 	}
 	
 	@Override
@@ -410,9 +407,9 @@ public class Game extends BasicGameState implements Serializable{
 						{
 							if(players[i] != null)
 							{
-								if(players[i].getAnimation(direction + ( isMoving ? 4 : 0)) != null)
+								if(players[i].getAnimation(players[i].getDirection() + ( players[i].isMoving() ? 4 : 0)) != null)
 								{
-									g.drawAnimation(players[i].getAnimation(direction + ( isMoving ? 4 : 0)), players[i].getX(), players[i].getY());
+									g.drawAnimation(players[i].getAnimation(players[i].getDirection() + ( players[i].isMoving() ? 4 : 0)), players[i].getX(), players[i].getY());
 								}
 							}
 						}
@@ -803,7 +800,10 @@ public class Game extends BasicGameState implements Serializable{
 				{
 					if (Bomb.getTime() - array.get(i).getFirstTime()  > TIME_TO_EXPLODE)
 					{
-						bombExplode.play();
+						if(bombExplode != null)
+						{
+							bombExplode.play();
+						}
 						Case c = getCaseFromCoord(array.get(i).getXBomb(),array.get(i).getYBomb());
 						plateau[c.getY()][c.getX()].setHasBombe(false);
 						array.get(i).setDrawable(false);

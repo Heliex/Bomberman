@@ -17,7 +17,9 @@ public class Server {
 	public static int NB_CLIENT_CONNECTED = 0;
 	public static CommunicationAvecServeur[] listeClients = new CommunicationAvecServeur[NB_CLIENT];
 	private boolean isInit = false;
-	public static  Game game;
+	public static Game game;
+	public static String commande;
+	public static int delta;
 	private Sound bonusSound,bombExplode, background;
 	public static void main(String[] args)
 	{
@@ -62,31 +64,23 @@ public class Server {
 					isInit = true;
 					broadCast(game);
 				}
-				if(CommunicationAvecServeur.listeDeMessage.size() > 20 && isInit)
+				if(isInit)
 				{
 					//Traitement de la liste
+					System.out.println("Données à traiter :");
 					while(!CommunicationAvecServeur.listeDeMessage.isEmpty())
 					{
-						System.out.println("Données à traiter :");
 						Object o = CommunicationAvecServeur.listeDeMessage.poll();
 						if(o instanceof String)
 						{
-							System.out.println("Une commande de déplacement à été reçu");
-							System.out.println(o);
+							broadCast((String)o);
 						}
 						else if( o instanceof Integer)
 						{
-							System.out.println("Le delta à été reçu");
-							System.out.println(o);
+							Integer i = (int)o;
+							Float f = (float)i;
+							broadCast(f);
 						}
-						else if( o instanceof Game)
-						{
-							System.out.println("Le jeu à été reçu");
-							game = (Game)o;
-							game.getPlayers()[0].setX(500);
-							broadCast(game);
-						}
-						
 					}
 				}
 			}

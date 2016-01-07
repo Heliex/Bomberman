@@ -77,6 +77,11 @@ public class Player implements Serializable{
 		return this.animations;
 	}
 	
+	public void setAllAnimation(Animation[] a)
+	{
+		this.animations = a;
+	}
+	
 	public int getDirection()
 	{
 		return this.direction;

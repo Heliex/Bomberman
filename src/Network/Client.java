@@ -23,12 +23,12 @@ public class Client extends BasicGameState{
 	private Socket socket;
 	private ThreadClient threadClient;
 	private int numClient;
-	private static Game game = null;
+	private Game game;
 	private Image wall,ground,indestructible_wall,groundGrass, house, wood, groundGrassTexas,groundTexas,hud,timer;
 	private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet,numbers;
 	private Image[] compteur = new Image[10];
 	private Sound bonusSound,bombExplode, background;
-	private static Player[] players = new Player[Server.NB_CLIENT];
+	private Player[] players = new Player[Server.NB_CLIENT];
 	
 	public Client(String host, int port)
 	{
@@ -54,27 +54,38 @@ public class Client extends BasicGameState{
 	@Override
 	public void keyPressed(int key,char c)
 	{
-		String commande = "";
 		switch(key)
 		{
 		case Input.KEY_UP:
 		case Input.KEY_Z:
-			commande = "UP";
+			players[numClient].setDirection(Game.UP);
+			players[numClient].setMoving(true);
 			break;
 		case Input.KEY_LEFT:
 		case Input.KEY_Q:
-			commande = "LEFT";
+			players[numClient].setDirection(Game.LEFT);
+			players[numClient].setMoving(true);
 			break;
 		case Input.KEY_DOWN:
 		case Input.KEY_S:
-			commande = "DOWN";
+			players[numClient].setDirection(Game.DOWN);
+			players[numClient].setMoving(true);
 			break;
 		case Input.KEY_RIGHT:
 		case Input.KEY_D:
-			commande = "RIGHT";
+			players[numClient].setDirection(Game.RIGHT);
+			players[numClient].setMoving(true);
+			break;
+		case Input.KEY_B:
+			threadClient.sendObject(numClient+":"+"BOMB");
 			break;
 		}
-		threadClient.sendObject(numClient  + ":" + commande);
+	}
+	
+	@Override
+	public void keyReleased(int key,char c)
+	{
+		players[numClient].setMoving(false);
 	}
 
 
@@ -128,19 +139,6 @@ public class Client extends BasicGameState{
 		// TODO Auto-generated method stub
 		if(game != null)
 		{
-			Player[] p = game.getPlayers();
-			if(players != null)
-			{
-				for(int i = 0 ; i < players.length ; i++)
-				{
-					if(players[i] != null && p[i] != null)
-					{
-						players[i].setX(p[i].getX());
-						players[i].setY(p[i].getY());
-						System.out.println(players[i]);
-					}
-				}
-			}
 			game.setBackground(background);
 			game.setSheet(sheet);
 			game.setBombSheet(bombSheet);
@@ -166,7 +164,7 @@ public class Client extends BasicGameState{
 			game.setGroundGrassTexas(groundGrassTexas);
 			game.setGroundTexas(groundTexas);
 			game.render(gc,statedGame,g);
-			threadClient.sendObject(game);
+			
 		}
 		else
 		{
@@ -180,7 +178,33 @@ public class Client extends BasicGameState{
 		threadClient.sendObject(delta);
 		if(game != null)
 		{
-			game.update(gc, stateGame, delta);
+			
+			for(int i = 0 ; i < Server.NB_CLIENT ; i++)
+			{
+				if(players[i].isDrawable())
+				{
+					if(players[i].isMoving())
+					{
+						switch(players[i].getDirection())
+						{
+						case Game.UP :
+							threadClient.sendObject(i+":UP");
+						break;
+						case Game.LEFT : 
+							threadClient.sendObject(i+":LEFT");
+						break;
+						case Game.DOWN : 
+							threadClient.sendObject(i+":DOWN");
+						break;
+						case Game.RIGHT : 
+							threadClient.sendObject(i+":RIGHT");
+						break;
+						}
+						
+					}
+				}
+			}
+			
 		}
 	}
 
@@ -198,5 +222,10 @@ public class Client extends BasicGameState{
 	public void setGame(Game gameReceived)
 	{
 		game = gameReceived;
+	}
+	
+	public Game getGame()
+	{
+		return this.game;
 	}
 }

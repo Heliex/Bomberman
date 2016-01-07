@@ -76,27 +76,4 @@ public class CommunicationAvecServeur implements Runnable{
 	{
 		this.in = in;
 	}
-	
-	public int getDirection(String commande)
-	{
-		int direction = 0;
-		switch(commande)
-		{
-		case "UP":
-			direction = 0;
-		break;
-		
-		case "LEFT":
-			direction = 1;
-			break;
-		
-		case "DOWN":
-			direction = 2;
-			break;
-		case "RIGHT":
-			direction = 3;
-			break;
-		}
-		return direction;
-	}
 }
