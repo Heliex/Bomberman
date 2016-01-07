@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class CommunicationAvecServeur implements Runnable{
 	private Socket client;
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
-	private int delta = 0 ;
+	public static ConcurrentLinkedQueue<Object> listeDeMessage = new ConcurrentLinkedQueue<Object>(); 
 	
 	public CommunicationAvecServeur(Socket socket) {
 		this.client = socket;
@@ -31,54 +32,7 @@ public class CommunicationAvecServeur implements Runnable{
 			// Attente d'envoi d'objet de la part d'un client
 			try {
 				Object o = in.readObject();
-				if(o instanceof String)
-				{
-					System.out.println("Une Chaine de caractère à été reçue");
-					String recu = (String)o;
-					String[] tab =  recu.split(":");
-					int numPlayer = Integer.parseInt(tab[0]);
-					String commande = tab[1];
-					System.out.println("Numéro du joueur : " + numPlayer);
-					System.out.println("Commande recu : " + commande);
-					if(Server.game != null)
-					{
-						switch(commande)
-						{
-							case "UP":
-								if(Server.game.canMove(Server.game.getPlayers()[numPlayer], getDirection("UP"),numPlayer))
-								{
-									System.out.println("Le joueur peux monter");
-									Server.game.getPlayers()[numPlayer].setY(Server.game.getPlayers()[numPlayer].getY() - delta);
-								}
-							break;
-							
-							case "LEFT":
-								if(Server.game.canMove(Server.game.getPlayers()[numPlayer], getDirection("LEFT"),numPlayer))
-								{
-									Server.game.getPlayers()[numPlayer].setX(Server.game.getPlayers()[numPlayer].getY() - delta);
-								}
-							break;
-							
-							case "DOWN":
-								if(Server.game.canMove(Server.game.getPlayers()[numPlayer], getDirection("DOWN"),numPlayer))
-								{
-									Server.game.getPlayers()[numPlayer].setY(Server.game.getPlayers()[numPlayer].getY() + delta);
-								}
-							break;
-							
-							case "RIGHT":
-								if(Server.game.canMove(Server.game.getPlayers()[numPlayer], getDirection("RIGHT"),numPlayer))
-								{
-									Server.game.getPlayers()[numPlayer].setX(Server.game.getPlayers()[numPlayer].getY() + delta);
-								}
-							break;
-						}
-					}
-				}
-				else if(o instanceof Integer)
-				{
-					delta = (int)o;
-				}
+				listeDeMessage.add(o);
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

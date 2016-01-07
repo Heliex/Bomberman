@@ -23,12 +23,12 @@ public class Client extends BasicGameState{
 	private Socket socket;
 	private ThreadClient threadClient;
 	private int numClient;
-	private Game game = null;
+	private static Game game = null;
 	private Image wall,ground,indestructible_wall,groundGrass, house, wood, groundGrassTexas,groundTexas,hud,timer;
 	private SpriteSheet sheet, bombSheet,explosionSheet,bonusSheet,deadSheet,groundSheet,numbers;
 	private Image[] compteur = new Image[10];
 	private Sound bonusSound,bombExplode, background;
-	private Player[] players = new Player[Server.NB_CLIENT];
+	private static Player[] players = new Player[Server.NB_CLIENT];
 	
 	public Client(String host, int port)
 	{
@@ -128,6 +128,19 @@ public class Client extends BasicGameState{
 		// TODO Auto-generated method stub
 		if(game != null)
 		{
+			Player[] p = game.getPlayers();
+			if(players != null)
+			{
+				for(int i = 0 ; i < players.length ; i++)
+				{
+					if(players[i] != null && p[i] != null)
+					{
+						players[i].setX(p[i].getX());
+						players[i].setY(p[i].getY());
+						System.out.println(players[i]);
+					}
+				}
+			}
 			game.setBackground(background);
 			game.setSheet(sheet);
 			game.setBombSheet(bombSheet);
@@ -182,8 +195,8 @@ public class Client extends BasicGameState{
 		this.numClient = num;
 	}
 	
-	public void setGame(Game game)
+	public void setGame(Game gameReceived)
 	{
-		this.game = game;
+		game = gameReceived;
 	}
 }

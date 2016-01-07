@@ -39,7 +39,6 @@ public class ThreadClient implements Runnable{
 				else if(o instanceof Game)
 				{
 					client.setGame((Game)o);
-					System.out.println(Game.getCURRENT_TIME());
 				}
 				
 			} catch (ClassNotFoundException e) {

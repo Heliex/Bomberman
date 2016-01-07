@@ -7,7 +7,6 @@ import java.net.Socket;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.Sound;
 
-import Graphique.Bomb;
 import MainGame.Game;
 
 public class Server {
@@ -17,10 +16,8 @@ public class Server {
 	public static final int NB_CLIENT = 4;
 	public static int NB_CLIENT_CONNECTED = 0;
 	public static CommunicationAvecServeur[] listeClients = new CommunicationAvecServeur[NB_CLIENT];
-	public static  Game game;
 	private boolean isInit = false;
-	private long  TIMER_AT_START = 0, TIMER_EXECUTION = 0;
-	private final static long TICK = 128;
+	public static  Game game;
 	private Sound bonusSound,bombExplode, background;
 	public static void main(String[] args)
 	{
@@ -60,32 +57,38 @@ public class Server {
 					listeClients[NB_CLIENT_CONNECTED] = com;	
 					NB_CLIENT_CONNECTED++;
 				}
-				if(!isInit)
+				if(NB_CLIENT_CONNECTED == NB_CLIENT && !isInit)
 				{
 					isInit = true;
 					broadCast(game);
 				}
-				if(isInit)
+				if(CommunicationAvecServeur.listeDeMessage.size() > 20 && isInit)
 				{
-					if(game.getTempsExecution() - game.getTimerStart() > Game.getTIMER())
+					//Traitement de la liste
+					while(!CommunicationAvecServeur.listeDeMessage.isEmpty())
 					{
-						Game.setCURRENT_TIME(Game.getCURRENT_TIME() - Game.getTIMER());
-						Game.setS((Game.getCURRENT_TIME()/Game.getTIMER()) % 60);
-						Game.setMin(((Game.getCURRENT_TIME()/Game.getTIMER()) % 3600 ) / 60);
-						game.setTimerStart(Bomb.getTime());
-					}
-					if(!game.getBackground().playing())
-					{
-						game.getBackground().play();
-					}
-					TIMER_EXECUTION = Bomb.getTime();
-					if(TIMER_EXECUTION - TIMER_AT_START > TICK)
-					{
-						broadCast(game);
-						TIMER_AT_START=Bomb.getTime();
+						System.out.println("Données à traiter :");
+						Object o = CommunicationAvecServeur.listeDeMessage.poll();
+						if(o instanceof String)
+						{
+							System.out.println("Une commande de déplacement à été reçu");
+							System.out.println(o);
+						}
+						else if( o instanceof Integer)
+						{
+							System.out.println("Le delta à été reçu");
+							System.out.println(o);
+						}
+						else if( o instanceof Game)
+						{
+							System.out.println("Le jeu à été reçu");
+							game = (Game)o;
+							game.getPlayers()[0].setX(500);
+							broadCast(game);
+						}
+						
 					}
 				}
-					
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

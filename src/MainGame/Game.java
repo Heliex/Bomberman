@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -352,6 +353,25 @@ public class Game extends BasicGameState implements Serializable{
 		}	
 	}
 	
+	@Override
+	public String toString() {
+		return "Game [isMoving=" + isMoving + ", isGameOver=" + isGameOver
+				+ ", isNewtorkGame=" + isNewtorkGame + ", isLevelFinished="
+				+ isLevelFinished + ", direction=" + direction + ", players="
+				+ Arrays.toString(players) + ", plateau="
+				+ Arrays.toString(plateau) + ", wall=" + wall + ", ground="
+				+ ground + ", indestructible_wall=" + indestructible_wall
+				+ ", groundGrass=" + groundGrass + ", house=" + house
+				+ ", wood=" + wood + ", groundGrassTexas=" + groundGrassTexas
+				+ ", groundTexas=" + groundTexas + ", hud=" + hud + ", timer="
+				+ timer + ", sheet=" + sheet + ", bombSheet=" + bombSheet
+				+ ", explosionSheet=" + explosionSheet + ", bonusSheet="
+				+ bonusSheet + ", deadSheet=" + deadSheet + ", groundSheet="
+				+ groundSheet + ", numbers=" + numbers + ", compteur="
+				+ Arrays.toString(compteur) + ", bonus=" + bonus + ", rand="
+				+ rand + ", numPlayer=" + numPlayer + "]";
+	}
+
 	public void drawPlayers(Graphics g,GameContainer gc,StateBasedGame game)
 	{
 		for(int i = 0 ; i < Server.NB_CLIENT ; i++)
@@ -386,7 +406,21 @@ public class Game extends BasicGameState implements Serializable{
 					}
 					else
 					{
-						g.drawAnimation(players[i].getAnimation(direction + ( isMoving ? 4 : 0)), players[i].getX(), players[i].getY());
+						try
+						{
+							if(players[i] != null)
+							{
+								if(players[i].getAnimation(direction + ( isMoving ? 4 : 0)) != null)
+								{
+									g.drawAnimation(players[i].getAnimation(direction + ( isMoving ? 4 : 0)), players[i].getX(), players[i].getY());
+								}
+							}
+						}
+						catch(NullPointerException bl)
+						{
+							
+						}
+						
 					}
 				}
 			}
