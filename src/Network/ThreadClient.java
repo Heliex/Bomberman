@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 import Graphique.Bomb;
 import Graphique.Case;
@@ -114,7 +115,16 @@ public class ThreadClient implements Runnable{
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (IOException e) {
+			}
+			catch(SocketException s)
+			{
+				this.in = null;
+				this.out = null;
+				this.client = null;
+				this.socket = null;
+				System.out.println("Exception de socket - Fermeture du flux");
+			}
+			catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}

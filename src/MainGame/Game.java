@@ -240,38 +240,35 @@ public class Game extends BasicGameState implements Serializable{
 				init(gc,game);
 				
 			}
-			for(int i = 0 ; i < Server.NB_CLIENT ; i++)
-			{
-				if(players[i] != null)
+				if(players[0] != null)
 				{
-					if(players[i].isInExplosion() && players[i].isDrawable())
+					if(players[0].isInExplosion() && players[0].isDrawable())
 					{
-						players[i].setIsDeadDrawable(true);
+						players[0].setIsDeadDrawable(true);
 					}
 					// Check if you can move before move
-					if(canMove(players[i],direction,delta) && players[i].isDrawable())
+					if(canMove(players[0],players[0].getDirection(),delta) && players[0].isDrawable())
 					{
-						if(players[i].isMoving())
+						if(players[0].isMoving())
 						{
-							switch(players[i].getDirection())
+							switch(players[0].getDirection())
 							{
 							case UP :
-								players[i].setY(players[i].getY() - delta * COEFF_DEPLACEMENT); 	
+								players[0].setY(players[0].getY() - delta * COEFF_DEPLACEMENT); 	
 							break;
 							case LEFT : 
-								players[i].setX(players[i].getX() - delta * COEFF_DEPLACEMENT); 
+								players[0].setX(players[0].getX() - delta * COEFF_DEPLACEMENT); 
 							break;
 							case DOWN : 
-								players[i].setY(players[i].getY() + delta * COEFF_DEPLACEMENT); 
+								players[0].setY(players[0].getY() + delta * COEFF_DEPLACEMENT); 
 							break;
 							case RIGHT : 
-								players[i].setX(players[i].getX() + delta * COEFF_DEPLACEMENT); 
+								players[0].setX(players[0].getX() + delta * COEFF_DEPLACEMENT); 
 							break;
 							}
 						}
 					}
 				}
-			}
 			
 			if(tempsExecution - tempsAuLancement > TIME_TO_BONUS_APPEAR)
 			{
@@ -427,154 +424,161 @@ public class Game extends BasicGameState implements Serializable{
 	@Override
 	public void keyPressed(int key, char c)
 	{
-		switch(key)
+		if(!isNewtorkGame)
 		{
-		case Input.KEY_UP :
-		case Input.KEY_Z :
-			this.direction = UP ; 
-			this.isMoving = true; 
-			break;
-		case Input.KEY_LEFT :
-		case Input.KEY_Q:
-			this.direction = LEFT ; 
-			this.isMoving = true; 
-			break;
-		case Input.KEY_DOWN : 
-		case Input.KEY_S:
-			this.direction = DOWN ; 
-			this.isMoving = true; 
-			break;
-		case Input.KEY_RIGHT :
-		case Input.KEY_D:
-			this.direction = RIGHT ; 
-			this.isMoving = true; 
-			break;
-			
-		case Input.KEY_B:
-			if(players[numPlayer].getBombe().size() < NB_BOMB_AVAILABLE)
+			switch(key)
 			{
-				new Thread(new Runnable(){
-					public void run()
-					{
-						Case c = getCaseFromCoord(players[numPlayer].getX()+TAILLE_CASE/2, players[numPlayer].getY()+TAILLE_CASE - (TAILLE_CASE/2));
-						if(c.getType() != "WALL" && c.getType() != "INDESTRUCTIBLE" && !c.hasBombe())
+			case Input.KEY_UP :
+			case Input.KEY_Z :
+				players[0].setDirection(UP) ; 
+				players[0].setMoving(true); 
+				break;
+			case Input.KEY_LEFT :
+			case Input.KEY_Q:
+				players[0].setDirection(LEFT) ; 
+				players[0].setMoving(true); 
+				break;
+			case Input.KEY_DOWN : 
+			case Input.KEY_S:
+				players[0].setDirection(DOWN) ; 
+				players[0].setMoving(true); 
+				break;
+			case Input.KEY_RIGHT :
+			case Input.KEY_D:
+				players[0].setDirection(RIGHT) ; 
+				players[0].setMoving(true);  
+				break;
+				
+			case Input.KEY_B:
+				if(players[numPlayer].getBombe().size() < NB_BOMB_AVAILABLE)
+				{
+					new Thread(new Runnable(){
+						public void run()
 						{
-							plateau[c.getY()][c.getX()].setHasBombe(true);
-							Bomb b = new Bomb(bombSheet,c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,new Explosion(c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,explosionSheet));
-							players[numPlayer].getBombe().add(b);
+							Case c = getCaseFromCoord(players[numPlayer].getX()+TAILLE_CASE/2, players[numPlayer].getY()+TAILLE_CASE - (TAILLE_CASE/2));
+							if(c.getType() != "WALL" && c.getType() != "INDESTRUCTIBLE" && !c.hasBombe())
+							{
+								plateau[c.getY()][c.getX()].setHasBombe(true);
+								Bomb b = new Bomb(bombSheet,c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,new Explosion(c.getRealX()+TAILLE_BOMB/2,c.getRealY()+TAILLE_BOMB/2,explosionSheet));
+								players[numPlayer].getBombe().add(b);
+							}
 						}
-					}
-				}).start();
+					}).start();
+				}
+				break;
+			case Input.KEY_ESCAPE:
+				System.exit(0);
+				break;
+			case Input.KEY_X:
+			    if(players[numPlayer].isOnBomb() && players[numPlayer].canMoveBomb())
+			    {
+			    	Bomb bomb = players[numPlayer].getBombFromCoord(players[numPlayer].getX(), players[numPlayer].getY());
+			    	switch(direction)
+			    	{
+				    	case UP:
+				    		new Thread(){
+				    			public void run()
+				    			{
+				    				long timerDeplacementDepart = Bomb.getTime();
+				    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+				    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getYBomb()-1 > 0 && bomb.isDrawable())
+						    		{
+				    					long timerDeplacementCourant = Bomb.getTime();
+						    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
+						    			{
+						    				bomb.setYBomb(bomb.getYBomb()-1);
+						    				bomb.getExplosion().setY(bomb.getYBomb());
+							    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+							    			timerDeplacementDepart = Bomb.getTime();
+							    			courante.setHasBombe(false);
+						    			}
+						    			
+						    		}
+				    			}
+				    		}.start();
+				    		
+				    		break;
+				    	case LEFT:
+				    		new Thread(){
+				    			public void run()
+				    			{
+				    				long timerDeplacementDepart = Bomb.getTime();
+				    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+				    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getXBomb()-1 > 0 && bomb.isDrawable())
+						    		{
+						    			long timerDeplacementCourant = Bomb.getTime();
+						    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
+						    			{
+						    				bomb.setXBomb(bomb.getXBomb()-1);
+						    				bomb.getExplosion().setX(bomb.getXBomb());
+							    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+							    			timerDeplacementDepart = Bomb.getTime();
+							    			courante.setHasBombe(false);
+						    			}
+						    			
+						    		}
+				    			}
+				    		}.start();
+				    		break;
+				    	case DOWN:
+				    		new Thread(){
+				    			public void run()
+				    			{
+				    				long timerDeplacementDepart = Bomb.getTime();
+				    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+				    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getYBomb()+TAILLE_BOMB < Main.HEIGHT && getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb() + TAILLE_BOMB).getType() != "WALL" && bomb.getYBomb()+TAILLE_BOMB < Main.HEIGHT && getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb() + TAILLE_BOMB).getType() != "INDESTRUCTIBLE" && bomb.isDrawable())
+						    		{
+						    			long timerDeplacementCourant = Bomb.getTime();
+						    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
+						    			{
+						    				bomb.setYBomb(bomb.getYBomb()+1);
+						    				bomb.getExplosion().setX(bomb.getYBomb());
+							    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+							    			timerDeplacementDepart = Bomb.getTime();
+							    			courante.setHasBombe(false);
+						    			}
+						    			
+						    		}
+				    			}
+				    		}.start();
+				    		break;
+				    	case RIGHT:
+				    		new Thread(){
+				    			public void run()
+				    			{
+				    				long timerDeplacementDepart = Bomb.getTime();
+				    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+				    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getXBomb() + TAILLE_BOMB < Main.WIDTH && getCaseFromCoord(bomb.getXBomb() + TAILLE_BOMB, bomb.getYBomb()).getType() != "WALL" && getCaseFromCoord(bomb.getXBomb() + TAILLE_BOMB, bomb.getYBomb()).getType() != "INDESTRUCTIBLE" && bomb.isDrawable())
+						    		{
+						    			long timerDeplacementCourant = Bomb.getTime();
+						    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
+						    			{
+						    				bomb.setXBomb(bomb.getXBomb()+1);
+						    				bomb.getExplosion().setX(bomb.getXBomb());
+							    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
+							    			timerDeplacementDepart = Bomb.getTime();
+							    			courante.setHasBombe(false);
+						    			}
+						    			
+						    		}
+				    			}
+				    		}.start();
+				    		break;
+			    	}
+			    }
+				break;
 			}
-			break;
-		case Input.KEY_ESCAPE:
-			System.exit(0);
-			break;
-		case Input.KEY_X:
-		    if(players[numPlayer].isOnBomb() && players[numPlayer].canMoveBomb())
-		    {
-		    	Bomb bomb = players[numPlayer].getBombFromCoord(players[numPlayer].getX(), players[numPlayer].getY());
-		    	switch(direction)
-		    	{
-			    	case UP:
-			    		new Thread(){
-			    			public void run()
-			    			{
-			    				long timerDeplacementDepart = Bomb.getTime();
-			    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
-			    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getYBomb()-1 > 0 && bomb.isDrawable())
-					    		{
-			    					long timerDeplacementCourant = Bomb.getTime();
-					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
-					    			{
-					    				bomb.setYBomb(bomb.getYBomb()-1);
-					    				bomb.getExplosion().setY(bomb.getYBomb());
-						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
-						    			timerDeplacementDepart = Bomb.getTime();
-						    			courante.setHasBombe(false);
-					    			}
-					    			
-					    		}
-			    			}
-			    		}.start();
-			    		
-			    		break;
-			    	case LEFT:
-			    		new Thread(){
-			    			public void run()
-			    			{
-			    				long timerDeplacementDepart = Bomb.getTime();
-			    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
-			    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getXBomb()-1 > 0 && bomb.isDrawable())
-					    		{
-					    			long timerDeplacementCourant = Bomb.getTime();
-					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
-					    			{
-					    				bomb.setXBomb(bomb.getXBomb()-1);
-					    				bomb.getExplosion().setX(bomb.getXBomb());
-						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
-						    			timerDeplacementDepart = Bomb.getTime();
-						    			courante.setHasBombe(false);
-					    			}
-					    			
-					    		}
-			    			}
-			    		}.start();
-			    		break;
-			    	case DOWN:
-			    		new Thread(){
-			    			public void run()
-			    			{
-			    				long timerDeplacementDepart = Bomb.getTime();
-			    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
-			    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getYBomb()+TAILLE_BOMB < Main.HEIGHT && getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb() + TAILLE_BOMB).getType() != "WALL" && bomb.getYBomb()+TAILLE_BOMB < Main.HEIGHT && getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb() + TAILLE_BOMB).getType() != "INDESTRUCTIBLE" && bomb.isDrawable())
-					    		{
-					    			long timerDeplacementCourant = Bomb.getTime();
-					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
-					    			{
-					    				bomb.setYBomb(bomb.getYBomb()+1);
-					    				bomb.getExplosion().setX(bomb.getYBomb());
-						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
-						    			timerDeplacementDepart = Bomb.getTime();
-						    			courante.setHasBombe(false);
-					    			}
-					    			
-					    		}
-			    			}
-			    		}.start();
-			    		break;
-			    	case RIGHT:
-			    		new Thread(){
-			    			public void run()
-			    			{
-			    				long timerDeplacementDepart = Bomb.getTime();
-			    				Case courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
-			    				while(courante != null && courante.getType() != "WALL" && courante.getType() != "INDESTRUCTIBLE" && bomb.getXBomb() + TAILLE_BOMB < Main.WIDTH && getCaseFromCoord(bomb.getXBomb() + TAILLE_BOMB, bomb.getYBomb()).getType() != "WALL" && getCaseFromCoord(bomb.getXBomb() + TAILLE_BOMB, bomb.getYBomb()).getType() != "INDESTRUCTIBLE" && bomb.isDrawable())
-					    		{
-					    			long timerDeplacementCourant = Bomb.getTime();
-					    			if(timerDeplacementCourant - timerDeplacementDepart > TIME_BETWEEN_BOMB_MOVEMENT)
-					    			{
-					    				bomb.setXBomb(bomb.getXBomb()+1);
-					    				bomb.getExplosion().setX(bomb.getXBomb());
-						    			courante = getCaseFromCoord(bomb.getXBomb(), bomb.getYBomb());
-						    			timerDeplacementDepart = Bomb.getTime();
-						    			courante.setHasBombe(false);
-					    			}
-					    			
-					    		}
-			    			}
-			    		}.start();
-			    		break;
-		    	}
-		    }
-			break;
 		}
+		
 	}
 	
 	@Override
 	public void keyReleased(int key, char c)
 	{
-		this.isMoving = false;
+		if(!isNewtorkGame)
+		{
+			players[0].setMoving(false);
+		}
 	}
 	
 	
@@ -884,7 +888,7 @@ public class Game extends BasicGameState implements Serializable{
 		Case c = getCaseFromCoord(x, y);
 		if(c != null && c.getType() == WALL)
 		{
-			plateau[c.getY()][c.getX()].setType(GROUND);
+			this.plateau[c.getY()][c.getX()].setType(GROUND);
 		}
 	}
 	

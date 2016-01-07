@@ -1,8 +1,10 @@
 package Network;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.Sound;
@@ -67,7 +69,6 @@ public class Server {
 				if(isInit)
 				{
 					//Traitement de la liste
-					System.out.println("Données à traiter :");
 					while(!CommunicationAvecServeur.listeDeMessage.isEmpty())
 					{
 						Object o = CommunicationAvecServeur.listeDeMessage.poll();
@@ -84,7 +85,17 @@ public class Server {
 					}
 				}
 			}
-		} catch (IOException e) {
+		}
+		catch(ConnectException c)
+		{
+			System.out.println("Un problème de connexion au serveur est survenue");
+		}
+		catch(SocketException s)
+		{
+			serverSocket = null;
+			System.out.println("Erreur fatale - Fermeture du serveur");
+		}
+		catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

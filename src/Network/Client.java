@@ -2,6 +2,7 @@ package Network;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -44,7 +45,12 @@ public class Client extends BasicGameState{
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IOException e) {
+		}
+		catch(ConnectException c)
+		{
+			System.out.println("Impossible de se connecter au serveur - il n'est peut être pas démarré");
+		}
+		catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
