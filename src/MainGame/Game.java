@@ -125,7 +125,8 @@ public class Game extends BasicGameState implements Serializable{
 	@Override
 	public void init(GameContainer gc,StateBasedGame game) throws SlickException
 	{
-		
+		min = ((TIMEGAME/TIMER) % 3600) / 60;
+		s = (TIMEGAME/TIMER) % 60 ;
 		// Initialize SpriteSheet
 		sheet = new SpriteSheet("images/Deplacements.png",LARGEUR_SPRITE,HAUTEUR_SPRITE);
 		bombSheet = new SpriteSheet("images/Bombe.png",TAILLE_BOMB,TAILLE_BOMB);

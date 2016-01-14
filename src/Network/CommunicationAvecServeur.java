@@ -32,8 +32,11 @@ public class CommunicationAvecServeur implements Runnable{
 		{
 			// Attente d'envoi d'objet de la part d'un client
 			try {
-				Object o = in.readObject();
-				listeDeMessage.add(o);
+				if( in != null)
+				{
+					Object o = in.readObject();
+					listeDeMessage.add(o);
+				}
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -55,8 +58,11 @@ public class CommunicationAvecServeur implements Runnable{
 	{
 		try
 		{
-			out.writeObject(o);
-			out.flush();
+			if(out != null)
+			{
+				out.writeObject(o);
+				out.flush();
+			}
 		}
 		catch(IOException io)
 		{

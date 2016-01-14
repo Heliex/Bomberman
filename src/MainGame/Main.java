@@ -21,6 +21,12 @@ public class Main extends StateBasedGame{
 	public static String titre = "Bomberman - v" + version;
 	public Main(String name) {
 		super(name);
+		
+		
+		
+		
+		
+		
 		// TODO Auto-generated constructor stub
 	}
 
@@ -43,7 +49,7 @@ public class Main extends StateBasedGame{
 		// TODO Auto-generated method stub
 		this.addState(new Menu());
 		this.addState(new Game());
-		this.addState(new Client("127.0.0.1",4444));
+		this.addState(new Client("10.155.128.58",4444));
 	}
 	
 	public Main getInstance()
