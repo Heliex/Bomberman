@@ -5,7 +5,10 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.newdawn.slick.Animation;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Image;
@@ -30,6 +33,7 @@ public class Client extends BasicGameState{
 	private Image[] compteur = new Image[10];
 	private Sound bonusSound,bombExplode, background;
 	private Player[] players = new Player[Server.NB_CLIENT];
+	private List<Animation[]> listeAnimations = new ArrayList<Animation[]>();
 	
 	public Client(String host, int port)
 	{
@@ -138,6 +142,10 @@ public class Client extends BasicGameState{
 		players[1].setDrawable(true);
 		players[2].setDrawable(true);
 		players[3].setDrawable(true);
+		for(int i = 0 ; i < Server.NB_CLIENT; i++)
+		{
+			listeAnimations.add(players[i].getAllAnimation());
+		}
 	}
 
 	@Override
@@ -160,6 +168,13 @@ public class Client extends BasicGameState{
 			game.setBombExplode(bombExplode);
 			game.setBackground(background);
 			game.setPlayers(players);
+			for(int i = 0 ; i < Server.NB_CLIENT ; i++)
+			{
+				if(players[i] != null)
+				{
+					players[i].setAllAnimation(listeAnimations.get(i));
+				}
+			}
 			game.initLevel(new File("niveaux/niveau1.txt"));
 			game.setGroundGrass(groundGrass);
 			game.setGround(ground);

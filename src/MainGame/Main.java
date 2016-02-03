@@ -49,7 +49,7 @@ public class Main extends StateBasedGame{
 		// TODO Auto-generated method stub
 		this.addState(new Menu());
 		this.addState(new Game());
-		this.addState(new Client("10.154.128.38",4444));
+		this.addState(new Client("192.168.0.30",4444));
 	}
 	
 	public Main getInstance()
