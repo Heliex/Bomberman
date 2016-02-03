@@ -144,7 +144,6 @@ public class Client extends BasicGameState{
 		players[3].setDrawable(true);
 		for(int i = 0 ; i < Server.NB_CLIENT; i++)
 		{
-			if(i != numClient)
 			listeAnimations.add(players[i].getAllAnimation());
 		}
 	}
