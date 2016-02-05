@@ -413,7 +413,7 @@ public class Game extends BasicGameState implements Serializable{
 						}
 						catch(NullPointerException bl)
 						{
-							
+							System.out.println("Impossible d'afficher l'animation car elle est nulle");
 						}
 						
 					}
