@@ -19,8 +19,10 @@ import org.newdawn.slick.SpriteSheet;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
+import Graphique.Case;
 import Graphique.Player;
 import MainGame.Game;
+import MainGame.Main;
 
 public class Client extends BasicGameState{
 
@@ -34,6 +36,8 @@ public class Client extends BasicGameState{
 	private Sound bonusSound,bombExplode, background;
 	private Player[] players = new Player[Server.NB_CLIENT];
 	private List<Animation[]> listeAnimations = new ArrayList<Animation[]>();
+	private int numberClientConnected = 0;
+	private Case[][] plateau = new Case[Game.NB_CASE_HAUTEUR][Game.NB_CASE_LARGEUR];
 	
 	public Client(String host, int port)
 	{
@@ -70,21 +74,25 @@ public class Client extends BasicGameState{
 		case Input.KEY_Z:
 			players[numClient].setDirection(Game.UP);
 			players[numClient].setMoving(true);
+			threadClient.sendObject(numClient+":"+"TRUE");
 			break;
 		case Input.KEY_LEFT:
 		case Input.KEY_Q:
 			players[numClient].setDirection(Game.LEFT);
 			players[numClient].setMoving(true);
+			threadClient.sendObject(numClient+":"+"TRUE");
 			break;
 		case Input.KEY_DOWN:
 		case Input.KEY_S:
 			players[numClient].setDirection(Game.DOWN);
 			players[numClient].setMoving(true);
+			threadClient.sendObject(numClient+":"+"TRUE");
 			break;
 		case Input.KEY_RIGHT:
 		case Input.KEY_D:
 			players[numClient].setDirection(Game.RIGHT);
 			players[numClient].setMoving(true);
+			threadClient.sendObject(numClient+":"+"TRUE");
 			break;
 		case Input.KEY_B:
 			threadClient.sendObject(numClient+":"+"BOMB");
@@ -96,6 +104,7 @@ public class Client extends BasicGameState{
 	public void keyReleased(int key,char c)
 	{
 		players[numClient].setMoving(false);
+		threadClient.sendObject(numClient+":"+"FALSE");
 	}
 
 
@@ -118,7 +127,7 @@ public class Client extends BasicGameState{
 		wood = groundSheet.getSprite(1, 1);
 		groundGrassTexas = groundSheet.getSprite(2, 1);
 		groundTexas = groundSheet.getSprite(3, 1);
-		
+		Game.setCOEFF_DEPLACEMENT(0.02f);
 		hud = hud.getSubImage(0, 0, Game.TAILLE_CASE*4 - Game.TAILLE_BOMB, Game.TAILLE_CASE);
 		timer = hud.getSubImage(4*Game.TAILLE_CASE - Game.TAILLE_BOMB, 0,Game.TAILLE_CASE, Game.TAILLE_CASE);
 		compteur[0] = numbers.getSprite(0, 0);
@@ -153,43 +162,13 @@ public class Client extends BasicGameState{
 		// TODO Auto-generated method stub
 		if(game != null)
 		{
-			game.setBackground(background);
-			game.setSheet(sheet);
-			game.setBombSheet(bombSheet);
-			game.setExplosionSheet(explosionSheet);
-			game.setDeadSheet(deadSheet);
-			game.setGroundSheet(groundSheet);
-			game.setBonusSheet(bonusSheet);
-			game.setNumbers(numbers);
-			game.setHud(hud);
-			game.setTimer(timer);
-			game.setCompteur(compteur);
-			game.setBonusSound(bonusSound);
-			game.setBombExplode(bombExplode);
-			game.setBackground(background);
-			game.setPlayers(players);
-			for(int i = 0 ; i < Server.NB_CLIENT ; i++)
-			{
-				if(players[i] != null && i != numClient)
-				{
-					players[i].setAllAnimation(listeAnimations.get(i));
-				}
-			}
-			game.initLevel(new File("niveaux/niveau1.txt"));
-			game.setGroundGrass(groundGrass);
-			game.setGround(ground);
-			game.setIndestructible_wall(indestructible_wall);
-			game.setWall(wall);
-			game.setHouse(house);
-			game.setWood(wood);
-			game.setGroundGrassTexas(groundGrassTexas);
-			game.setGroundTexas(groundTexas);
+			System.out.println(plateau[1][0]);
 			game.render(gc,statedGame,g);
-			
 		}
 		else
 		{
-			g.drawString("En attente de connexion de tous les joueurs !!", 300, 300);
+			g.drawString("En attente de connexion de tous les joueurs !!", Main.WIDTH /2 - 200, Main.HEIGHT / 2);
+			g.drawString("JOUEUR CONNECTES : " + numberClientConnected+ "/" + Server.NB_CLIENT, Main.WIDTH /2 - 200, Main.HEIGHT / 2 + 100);
 		}
 	}
 
@@ -199,7 +178,6 @@ public class Client extends BasicGameState{
 		threadClient.sendObject(delta);
 		if(game != null)
 		{
-			
 			for(int i = 0 ; i < Server.NB_CLIENT ; i++)
 			{
 				if(players[i].isDrawable())
@@ -224,10 +202,12 @@ public class Client extends BasicGameState{
 						
 					}
 				}
+				threadClient.sendObject(plateau);
 			}
-			
+			game.update(gc, stateGame, delta);
 		}
 	}
+
 
 	@Override
 	public int getID() {
@@ -240,6 +220,11 @@ public class Client extends BasicGameState{
 		this.numClient = num;
 	}
 	
+	public int getNumClient()
+	{
+		return this.numClient;
+	}
+	
 	public void setGame(Game gameReceived)
 	{
 		game = gameReceived;
@@ -248,5 +233,20 @@ public class Client extends BasicGameState{
 	public Game getGame()
 	{
 		return this.game;
+	}
+	
+	public int getNumberClientConnected()
+	{
+		return this.numberClientConnected;
+	}
+	
+	public void setNumberClientConnected(int nb)
+	{
+		this.numberClientConnected = nb;
+	}
+	
+	public void setPlateau(Case[][] board)
+	{
+		this.plateau = board;
 	}
 }

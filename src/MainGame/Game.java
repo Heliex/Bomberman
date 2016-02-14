@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -30,7 +29,7 @@ import Graphique.Player;
 import Network.Server;
 
 
-public class Game extends BasicGameState implements Serializable{
+public class Game extends BasicGameState implements Serializable,Cloneable{
 	
 	/**
 	 * 
@@ -103,11 +102,11 @@ public class Game extends BasicGameState implements Serializable{
 		isLevelFinished = false;
 		isGameOver = false;
 		// Initialize board
-		plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
+		//plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
 		bonus = new LinkedList<Bonus>();
 		// Initialize level
-		File level = new File("niveaux/" + LEVEL + LEVEL_START+ ".txt");
-		initLevel(level);
+		//File level = new File("niveaux/" + LEVEL + LEVEL_START+ ".txt");
+		//initLevel(level);
 		rand = new Random();
 		// Initialize timer
 		timerStart = Bomb.getTime();
@@ -348,7 +347,7 @@ public class Game extends BasicGameState implements Serializable{
 		}
 	}
 	
-	@Override
+	/*@Override
 	public String toString() {
 		return "Game [isMoving=" + isMoving + ", isGameOver=" + isGameOver
 				+ ", isNewtorkGame=" + isNewtorkGame + ", isLevelFinished="
@@ -365,7 +364,8 @@ public class Game extends BasicGameState implements Serializable{
 				+ groundSheet + ", numbers=" + numbers + ", compteur="
 				+ Arrays.toString(compteur) + ", bonus=" + bonus + ", rand="
 				+ rand + ", numPlayer=" + numPlayer + "]";
-	}
+	}*/
+	
 
 	public void drawPlayers(Graphics g,GameContainer gc,StateBasedGame game)
 	{
@@ -741,6 +741,7 @@ public class Game extends BasicGameState implements Serializable{
 	// Draw the board 
 	public void drawBoard(Graphics g)
 	{
+		System.out.println(this);
 		Image toDraw = null;
 		if(plateau != null)
 		{
@@ -887,9 +888,12 @@ public class Game extends BasicGameState implements Serializable{
 	public void canRemove(float x, float y)
 	{
 		Case c = getCaseFromCoord(x, y);
+		System.out.println(c);
+		
 		if(c != null && c.getType() == WALL)
 		{
 			this.plateau[c.getY()][c.getX()].setType(GROUND);
+			System.out.println("AVANT RENDER " + this.plateau[c.getY()][c.getX()]);
 		}
 	}
 	
@@ -1602,4 +1606,12 @@ public class Game extends BasicGameState implements Serializable{
 	{
 		return this;
 	}
+
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		// TODO Auto-generated method stub
+		return super.clone();
+	}
+	
+	
 }

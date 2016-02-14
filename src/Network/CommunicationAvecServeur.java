@@ -46,9 +46,13 @@ public class CommunicationAvecServeur implements Runnable{
 				this.in = null;
 				this.out = null;
 				this.client = null;
+				Server.NB_CLIENT_CONNECTED--;
+				Server.broadCast(Server.NB_CLIENT_CONNECTED+":NB_CLIENT");
+				
 			}
 			catch (IOException e) {
 				// TODO Auto-generated catch block
+				System.out.println("JE passe dans L'I/O Exception de la communication avec le Serveur");
 				e.printStackTrace();
 			}
 		}
