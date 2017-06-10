@@ -10,14 +10,15 @@ public class Player extends LogiqueComponent {
 	private int numJoueur;
 	private boolean isMoving;
 	private int direction;
-	private int coeff_deplacement = 3;
+	private float coeffDeplacement;
 	private Bombe[] bombes = new Bombe[NB_BOMBE_MAX];
 	
 	// COnstantes
 	public final static int UP = 0, LEFT = 1 , DOWN = 2 , RIGHT = 3 ;
 	public final static int NB_BOMBE_AT_START = 3, NB_BOMBE_MAX = 5;
 	public final static int NB_LIFE_AT_START = 5;
-	public final static float COEFF_MAX = 0.25f, COEFF_MIN = 0.10f;
+	public final static int VITESSE = 2;
+	public final static float COEFF_MIN = 1.5f;
 	public static int TAILLE_EXPLOSION = 2;
 	
 	// Variables
@@ -33,6 +34,7 @@ public class Player extends LogiqueComponent {
 		this.nbBombeOnBoard = 0;
 		this.nbBombesPosable = NB_BOMBE_MAX;
 		this.lifeAvailable = NB_LIFE_AT_START;
+		this.coeffDeplacement = COEFF_MIN;
 	}
 	
 	public String toString()
@@ -72,16 +74,16 @@ public class Player extends LogiqueComponent {
 		this.direction = direction;
 	}
 	
-	public int getCoeffDeplacement()
+	public float getCoeffDeplacement()
 	{
-		return this.coeff_deplacement;
+		return this.coeffDeplacement;
 	}
 	
 	// A enlever peut-être
 	public void setCoeffDeplacement(int coeff)
 	{
 		
-		this.coeff_deplacement = coeff;
+		this.coeffDeplacement = coeff;
 		
 	}
 	public Bombe[] getListeBombes()
@@ -151,6 +153,5 @@ public class Player extends LogiqueComponent {
 		}
 		
 		return equals;
-	}
-	
+	}	
 }

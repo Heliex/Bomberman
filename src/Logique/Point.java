@@ -2,8 +2,8 @@ package Logique;
 
 public class Point {
 	
-	private int x;
-	private int y;
+	private float x;
+	private float y;
 	
 	public Point()
 	{
@@ -11,13 +11,13 @@ public class Point {
 		this.y = 0;
 	}
 	
-	public Point(int x , int y)
+	public Point(float x , float y)
 	{
 		this.x = x;
 		this.y = y;
 	}
 	
-	public int getX()
+	public float getX()
 	{
 		return this.x;
 	}
@@ -27,7 +27,7 @@ public class Point {
 		this.x = x;
 	}
 	
-	public int getY()
+	public float getY()
 	{
 		return this.y;
 	}

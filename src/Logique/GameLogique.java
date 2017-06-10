@@ -115,7 +115,7 @@ public class GameLogique implements Serializable{
 		players[0] = new Player(0,0,true,0,Player.RIGHT);
 		players[1] = new Player( (NB_CASE_LARGEUR - 1) * Case.TAILLE_CASE,0,true,1,Player.LEFT);
 		players[2] = new Player(0,(NB_CASE_HAUTEUR  - 1 )* Case.TAILLE_CASE,true,2,Player.RIGHT);
-		players[3] = new Player((NB_CASE_LARGEUR  - 1 )* Case.TAILLE_CASE,(NB_CASE_HAUTEUR - 1)* Case.TAILLE_CASE,true,3,Player.LEFT);
+		players[3] = new Player((NB_CASE_LARGEUR  - 1 )* Case.TAILLE_CASE ,(NB_CASE_HAUTEUR - 1)* Case.TAILLE_CASE,true,3,Player.LEFT);
 	}
 	
 	/**
@@ -124,7 +124,7 @@ public class GameLogique implements Serializable{
 	 * @param y
 	 * @param indiceJoueur
 	 */
-	public void placerJoueur(int x,int y,int indiceJoueur)
+	public void placerJoueur(float x,float y,int indiceJoueur)
 	{
 		if(players[indiceJoueur] != null)
 		{
@@ -161,19 +161,19 @@ public class GameLogique implements Serializable{
 				switch(direction) // Switch qui gère la mise à jour des coordonées du joueur
 				{
 					case Player.UP:
-						placerJoueur(players[indiceJoueur].getX(), players[indiceJoueur].getY() - players[indiceJoueur].getCoeffDeplacement(), indiceJoueur);
+						placerJoueur((float)players[indiceJoueur].getX(), players[indiceJoueur].getY() - (Player.VITESSE*players[indiceJoueur].getCoeffDeplacement()), indiceJoueur);
 					break;
 					
 					case Player.LEFT:
-						placerJoueur(players[indiceJoueur].getX() - players[indiceJoueur].getCoeffDeplacement(), players[indiceJoueur].getY(), indiceJoueur);
+						placerJoueur(players[indiceJoueur].getX() - (Player.VITESSE*players[indiceJoueur].getCoeffDeplacement()), players[indiceJoueur].getY(), indiceJoueur);
 					break;
 						
 					case Player.DOWN:
-						placerJoueur(players[indiceJoueur].getX(), players[indiceJoueur].getY() + players[indiceJoueur].getCoeffDeplacement(), indiceJoueur);
+						placerJoueur(players[indiceJoueur].getX(), players[indiceJoueur].getY() + (Player.VITESSE*players[indiceJoueur].getCoeffDeplacement()), indiceJoueur);
 					break;
 					
 					case Player.RIGHT:
-						placerJoueur(players[indiceJoueur].getX() + players[indiceJoueur].getCoeffDeplacement(), players[indiceJoueur].getY(), indiceJoueur);
+						placerJoueur(players[indiceJoueur].getX() + (Player.VITESSE*players[indiceJoueur].getCoeffDeplacement()), players[indiceJoueur].getY(), indiceJoueur);
 					break;
 				}
 			}
@@ -193,35 +193,62 @@ public class GameLogique implements Serializable{
 		// Ne pas oublier de rajouter le fait que selon la direction appuyée
 		// La gestion du déplacement change, et, de fait il faut prendre en compte la direction voulue
 		// pour gérer les collisions (Surtout sur le test de coordonnées = MUR)
+		// Récuperer le centre des coordonnées du bomberman
+		
+		// currentPosMiddlePoint
+		float currentBombermanHorizontalMiddle = p.getX()  + offSetCollisionHorizontal/2;
+		float currentBombermanVerticalMiddle = p.getY() + offSetCollisionVertical/2;
+		
+		Point middle = new Point(currentBombermanHorizontalMiddle,currentBombermanVerticalMiddle);
 		switch(direction)
 		{
-		// TODO : Implémenter la gestion correcte des collissions.
 			case Player.UP:
-				if(p.getY() - p.getCoeffDeplacement() >= 0 && getCaseFromCoord(p.getX(), p.getY() - p.getCoeffDeplacement()) != null && getCaseFromCoord(p.getX(),p.getY() - p.getCoeffDeplacement()).getType() != Case.WALL) // && la position voulue n'est pas un mur)
-				{
-					canMove = true;
-				}
-			
+				// Gestion des collisions vers le haut
+				if(		middle.getY() - offSetCollisionVertical/2 -  (p.getCoeffDeplacement()*Player.VITESSE)  >  0 &&
+						getCaseFromCoord(middle.getX() - offSetCollisionHorizontal/2 ,middle.getY() - offSetCollisionVertical/2 - (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.WALL &&
+						getCaseFromCoord(middle.getX() - offSetCollisionHorizontal/2, middle.getY() - offSetCollisionVertical/2 - (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.INDESTRUCTIBLE &&
+						getCaseFromCoord(middle.getX(), middle.getY() - offSetCollisionVertical/2 - (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.WALL &&
+						getCaseFromCoord(middle.getX(), middle.getY() - offSetCollisionVertical/2 - (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.INDESTRUCTIBLE
+				   )
+					{
+						canMove=true;
+					}
 			break;
 			
 			case Player.LEFT:
-				if(p.getX() - p.getCoeffDeplacement() >= 0 && getCaseFromCoord(p.getX() - p.getCoeffDeplacement(), p.getY()) != null && getCaseFromCoord(p.getX() - p.getCoeffDeplacement(), p.getY()).getType() != Case.WALL && getCaseFromCoord(p.getX() - p.getCoeffDeplacement(), p.getY()).getType() != Case.INDESTRUCTIBLE ) // && la position voulue n'est pas un mur
+				// Gestion des collision vers la gauche
+				if( middle.getX() - offSetCollisionHorizontal/2 - (p.getCoeffDeplacement()*Player.VITESSE) > 0 &&
+					getCaseFromCoord(middle.getX() - offSetCollisionHorizontal/2 - (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() - offSetCollisionVertical/2 +1).getType() != Case.WALL &&
+					getCaseFromCoord(middle.getX() - offSetCollisionHorizontal/2 - (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() - offSetCollisionVertical/2 +1).getType() != Case.INDESTRUCTIBLE &&
+					getCaseFromCoord(middle.getX() - offSetCollisionHorizontal/2 - (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() + offSetCollisionVertical/2 -1).getType() != Case.WALL &&
+					getCaseFromCoord(middle.getX() - offSetCollisionHorizontal/2 - (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() + offSetCollisionVertical/2 -1).getType() != Case.INDESTRUCTIBLE)
 				{
-					canMove= true;
+					canMove = true;
 				}
 				break;
 			
 			case Player.DOWN:
-				if(p.getY() +p.getCoeffDeplacement() + offSetCollisionVertical < (GameLogique.NB_CASE_HAUTEUR - 1) * Case.TAILLE_CASE && getCaseFromCoord(p.getX(), p.getY() + p.getCoeffDeplacement() + offSetCollisionVertical) != null && getCaseFromCoord(p.getX(), p.getY() + p.getCoeffDeplacement() + offSetCollisionVertical).getType() != Case.WALL && getCaseFromCoord(p.getX(), p.getY() + p.getCoeffDeplacement() + offSetCollisionVertical).getType() != Case.INDESTRUCTIBLE) // && la position voulue n'est pas un mur
-				{	
-					canMove= true;
-				}
+				// Gestion des collisions vers le bas
+				if(		middle.getY() + offSetCollisionVertical/2 +  (p.getCoeffDeplacement()*Player.VITESSE) < NB_CASE_HAUTEUR * Case.TAILLE_CASE &&
+						getCaseFromCoord(middle.getX() - offSetCollisionHorizontal/2 ,middle.getY() + offSetCollisionVertical/2 + (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.WALL &&
+						getCaseFromCoord(middle.getX() - offSetCollisionHorizontal/2, middle.getY() + offSetCollisionVertical/2 + (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.INDESTRUCTIBLE &&
+						getCaseFromCoord(middle.getX(), middle.getY() + offSetCollisionVertical/2 + (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.WALL &&
+						getCaseFromCoord(middle.getX(), middle.getY() + offSetCollisionVertical/2 + (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.INDESTRUCTIBLE
+				   )
+					{
+						canMove=true;
+					}
 				break;
 		
 			case Player.RIGHT:
-				if((p.getX() + p.getCoeffDeplacement() - offSetCollisionHorizontal) < (GameLogique.NB_CASE_LARGEUR - 1) * Case.TAILLE_CASE && getCaseFromCoord(p.getX() + p.getCoeffDeplacement(),p.getY()) != null && getCaseFromCoord(p.getX() + p.getCoeffDeplacement(), p.getY() ).getType() != Case.WALL && getCaseFromCoord(p.getX() + p.getCoeffDeplacement(), p.getY()).getType() != Case.INDESTRUCTIBLE) // && la position voulue n'est pas un mur
+				// Gestion des collision vers la gauche
+				if( middle.getX() + offSetCollisionHorizontal/2 + p.getCoeffDeplacement() < NB_CASE_LARGEUR * Case.TAILLE_CASE  &&
+					getCaseFromCoord(middle.getX() + offSetCollisionHorizontal/2 + (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() - offSetCollisionVertical/2 +1).getType() != Case.WALL &&
+					getCaseFromCoord(middle.getX() + offSetCollisionHorizontal/2 + (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() - offSetCollisionVertical/2 +1).getType() != Case.INDESTRUCTIBLE &&
+					getCaseFromCoord(middle.getX() + offSetCollisionHorizontal/2 + (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() + offSetCollisionVertical/2 -1).getType() != Case.WALL &&
+					getCaseFromCoord(middle.getX() + offSetCollisionHorizontal/2 + (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() + offSetCollisionVertical/2 -1).getType() != Case.INDESTRUCTIBLE)
 				{
-					canMove= true;
+					canMove = true;
 				}
 				break;
 			
@@ -249,21 +276,21 @@ public class GameLogique implements Serializable{
 	
 	/**
 	 * Renvoie une case à partir d'un X et d'un Y réel
-	 * @param x
-	 * @param y
+	 * @param f
+	 * @param g
 	 * @return
 	 */
-	public Case getCaseFromCoord(int x, int y)
+	public Case getCaseFromCoord(float f, float g)
 	{
 		Case c = null;
 		for(int i = 0 ; i < GameLogique.NB_CASE_HAUTEUR ; i++)
 		{
 			for(int j = 0; j < GameLogique.NB_CASE_LARGEUR; j++)
 			{
-				int xCase = plateau[i][j].getX() * Case.TAILLE_CASE;
-				int yCase = plateau[i][j].getY() * Case.TAILLE_CASE;
+				float xCase = plateau[i][j].getX() * Case.TAILLE_CASE;
+				float yCase = plateau[i][j].getY() * Case.TAILLE_CASE;
 				
-				if(x >= xCase  && x <= xCase+Case.TAILLE_CASE && y >= yCase && y <= yCase + Case.TAILLE_CASE)
+				if(f >= xCase  && f <= xCase+Case.TAILLE_CASE && g >= yCase && g <= yCase + Case.TAILLE_CASE)
 				{
 					c = plateau[i][j];
 					break;

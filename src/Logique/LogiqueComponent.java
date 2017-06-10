@@ -23,18 +23,18 @@ public abstract class LogiqueComponent implements Serializable{
 		this.isDrawable = false;
 	}
 	
-	public LogiqueComponent(int x, int y, boolean isDrawable)
+	public LogiqueComponent(float f, float g, boolean isDrawable)
 	{
-		this.p = new Position(x,y);
+		this.p = new Position(f,g);
 		this.isDrawable = isDrawable;
 	}
 	
-	public int getX()
+	public float getX()
 	{
 		return this.p.getX();
 	}
 	
-	public int getY()
+	public float getY()
 	{
 		return this.p.getY();
 	}
@@ -44,12 +44,12 @@ public abstract class LogiqueComponent implements Serializable{
 		return this.isDrawable;
 	}
 	
-	public void setX(int x)
+	public void setX(float x)
 	{
 		this.p.setX(x);
 	}
 	
-	public void setY(int y)
+	public void setY(float y)
 	{
 		this.p.setY(y);
 	}

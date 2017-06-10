@@ -10,9 +10,9 @@ public class Bombe extends LogiqueComponent implements Runnable{
 	private Player player;
 	private int indiceBombe;
 	
-	public Bombe(int x, int y, boolean isDrawable, Player player, int indiceBombe)
+	public Bombe(float f, float g, boolean isDrawable, Player player, int indiceBombe)
 	{
-		super(x,y,isDrawable);
+		super(f,g,isDrawable);
 		this.indiceBombe = indiceBombe;
 		this.player = player;
 		this.explosion = new Explosion(this.getX(),this.getY(),false);

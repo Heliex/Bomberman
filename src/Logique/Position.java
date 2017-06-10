@@ -8,10 +8,10 @@ public class Position implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private int x;
-	private int y;
+	private float x;
+	private float y;
 	
-	public Position(int x, int y )
+	public Position(float x, float y )
 	{
 		this.x = x;
 		this.y = y;
@@ -23,22 +23,22 @@ public class Position implements Serializable {
 		this.y = 0;
 	}
 	
-	public int getX()
+	public float getX()
 	{
 		return this.x;
 	}
 	
-	public void setX(int x)
+	public void setX(float x)
 	{
 		this.x = x;
 	}
 	
-	public int getY()
+	public float getY()
 	{
 		return this.y ;
 	}
 	
-	public void setY(int y)
+	public void setY(float y)
 	{
 		this.y = y;
 	}

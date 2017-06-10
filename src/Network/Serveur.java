@@ -32,7 +32,7 @@ public class Serveur{
 	private static ThreadServeur[] threads = new ThreadServeur[NB_MAX_CONNECTED];
 	
 	// Intervalle de refresh du serveur (Combien de temps écoulé entre un nouvel envoi du serveur aux clients)
-	public final static int INTERVALLE_REFRESH = 25;
+	public final static int INTERVALLE_REFRESH = 15;
 	
 	// Timer de départ
 	private long startTimer;
