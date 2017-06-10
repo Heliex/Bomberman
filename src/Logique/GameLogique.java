@@ -239,24 +239,11 @@ public class GameLogique implements Serializable{
 		
 		if(players[indiceJoueur].getNBombeAvailable() > 0 && players[indiceJoueur].getNbBombeOnBoard() < players[indiceJoueur].getNbBombePosable()) // Si le joueur dispose d'une bombe et qu'il ne dépasse pas son quota de bombe posable en simultanée
 		{
-			players[indiceJoueur].getListeBombes()[players[indiceJoueur].getNbBombeOnBoard()] = new Bombe(players[indiceJoueur].getX(),players[indiceJoueur].getY(),true);
-			players[indiceJoueur].getListeBombes()[players[indiceJoueur].getNbBombeOnBoard()].startTimer();
+			Bombe b = new Bombe(players[indiceJoueur].getX(),players[indiceJoueur].getY(),true, players[indiceJoueur],players[indiceJoueur].getNbBombeOnBoard());
+			new Thread(b).start();
+			players[indiceJoueur].getListeBombes()[players[indiceJoueur].getNbBombeOnBoard()] = b;
 			players[indiceJoueur].setNbBombeAvailable(players[indiceJoueur].getNBombeAvailable() - 1);
 			players[indiceJoueur].setNbBombeOnBoard(players[indiceJoueur].getNbBombeOnBoard() + 1);
-		}
-	}
-	
-	/**
-	 * Permet de retirer un bombe liée au joueur
-	 * @param indiceJoueur
-	 */
-	public void retirerBombe(int indiceJoueur)
-	{
-		if(players[indiceJoueur] != null)
-		{
-			players[indiceJoueur].getListeBombes()[players[indiceJoueur].getNbBombeOnBoard() - 1 ] = null;
-			players[indiceJoueur].setNbBombeAvailable(players[indiceJoueur].getNBombeAvailable() + 1);
-			players[indiceJoueur].setNbBombeOnBoard(players[indiceJoueur].getNbBombeOnBoard() - 1);
 		}
 	}
 	

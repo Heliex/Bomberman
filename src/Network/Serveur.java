@@ -11,7 +11,6 @@ import java.util.LinkedList;
 
 import Commande.DeplacerJoueur;
 import Commande.PoserBombe;
-import Commande.RetirerBombe;
 import Commande.StopperDeplacementJoueur;
 import Logique.GameLogique;
 
@@ -101,11 +100,6 @@ public class Serveur{
 					{
 						PoserBombe pb = (PoserBombe)o;
 						gameLogique.poserBombe(pb.getNum());
-					}
-					else if(o instanceof RetirerBombe) // Retirer la bombe pour le joueur
-					{
-						RetirerBombe rb = (RetirerBombe)o;
-						gameLogique.retirerBombe(rb.getNum());
 					}
 					listeCommande.removeFirst();
 				}

@@ -15,7 +15,8 @@ public class Player extends LogiqueComponent {
 	
 	// COnstantes
 	public final static int UP = 0, LEFT = 1 , DOWN = 2 , RIGHT = 3 ;
-	public final static int NB_BOMBE_AT_START = 1, NB_BOMBE_MAX = 5;
+	public final static int NB_BOMBE_AT_START = 3, NB_BOMBE_MAX = 5;
+	public final static int NB_LIFE_AT_START = 5;
 	public final static float COEFF_MAX = 0.25f, COEFF_MIN = 0.10f;
 	public static int TAILLE_EXPLOSION = 2;
 	
@@ -28,10 +29,10 @@ public class Player extends LogiqueComponent {
 		this.numJoueur = numJoueur;
 		this.direction = direction;
 		this.isMoving = false;
-		this.nbBombeAvailable=1;
+		this.nbBombeAvailable=NB_BOMBE_AT_START;
 		this.nbBombeOnBoard = 0;
-		this.nbBombesPosable = 2;
-		this.lifeAvailable = 5;
+		this.nbBombesPosable = NB_BOMBE_MAX;
+		this.lifeAvailable = NB_LIFE_AT_START;
 	}
 	
 	public String toString()

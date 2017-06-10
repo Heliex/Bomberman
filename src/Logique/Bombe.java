@@ -2,17 +2,19 @@ package Logique;
 
 
 
-public class Bombe extends LogiqueComponent{
+public class Bombe extends LogiqueComponent implements Runnable{
 	
 	private static final long serialVersionUID = -3677888271498285808L;
 	public final static int TIME_TO_EXPLODE = 4000, TAILLE_BOMBE = 16 , TIME_BETWEEN_BOMB_MOVEMENT = 250;
 	private Explosion explosion;
-	private long startTimer ;
+	private Player player;
+	private int indiceBombe;
 	
-	public Bombe(int x, int y, boolean isDrawable)
+	public Bombe(int x, int y, boolean isDrawable, Player player, int indiceBombe)
 	{
 		super(x,y,isDrawable);
-		this.startTimer = 0;
+		this.indiceBombe = indiceBombe;
+		this.player = player;
 		this.explosion = new Explosion(this.getX(),this.getY(),false);
 	}
 	
@@ -26,18 +28,32 @@ public class Bombe extends LogiqueComponent{
 		return this.explosion;
 	}
 	
-	public long getStartTimer()
+	public Player getPlayer()
 	{
-		return this.startTimer;
+		return this.player;
 	}
 	
-	public long getTempsEcoule()
+	public int getIndiceBombe()
 	{
-		return System.currentTimeMillis() - startTimer;
+		return this.indiceBombe;
 	}
 	
-	public void startTimer()
-	{
-		this.startTimer = System.currentTimeMillis();
+	@Override
+	synchronized public void  run() {
+		
+		long timerStart = System.currentTimeMillis();
+		while(true)
+		{
+			if(System.currentTimeMillis() - timerStart > TIME_TO_EXPLODE)
+			{
+				this.setDrawable(false);
+				player.setNbBombeAvailable(player.getNBombeAvailable() + 1);
+				player.setNbBombeOnBoard(player.getNbBombeOnBoard() - 1);
+				player.getListeBombes()[indiceBombe] = null;
+				break;
+				
+			}
+		}
+		
 	}
 }

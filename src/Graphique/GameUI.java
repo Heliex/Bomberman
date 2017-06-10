@@ -9,7 +9,6 @@ import org.newdawn.slick.SlickException;
 
 import Commande.DeplacerJoueur;
 import Commande.PoserBombe;
-import Commande.RetirerBombe;
 import Commande.StopperDeplacementJoueur;
 import Logique.Bombe;
 import Logique.Case;
@@ -22,7 +21,6 @@ public class GameUI extends BasicGame{
 
 	private ThreadClient client;
 	private GameLogique gameLogique;
-	private long timerStart;
 	private BombeUI[][] bombeUI;
 	private ExplosionUI[][] explosionUI;
 	private CaseUI[][] plateauUI;
@@ -32,7 +30,6 @@ public class GameUI extends BasicGame{
 	public GameUI(String name)
 	{
 		super(name);
-		this.timerStart = System.currentTimeMillis();
 		this.client = new ThreadClient();
 		this.bombeUI = new BombeUI[GameLogique.NB_PLAYERS][Player.NB_BOMBE_MAX];
 		this.explosionUI = new ExplosionUI[GameLogique.NB_PLAYERS][Player.NB_BOMBE_MAX];
@@ -111,7 +108,7 @@ public class GameUI extends BasicGame{
 						if(bombes[j].isDrawable())
 						{
 							g.drawAnimation(bombeUI[i][j].getAnimation(), bombes[j].getX(), bombes[j].getY());
-						}	
+						}
 					}
 				}
 			}
