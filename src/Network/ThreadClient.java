@@ -1,205 +1,180 @@
 package Network;
-
+/**
+ * Classe qui permet de créer la socket côté client pour échanger avec le serveur
+ * @author Heliex
+ * @date   05/04/2017
+ */
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.SocketException;
 
-import Graphique.Bomb;
-import Graphique.Case;
-import Graphique.Explosion;
-import MainGame.Game;
+import Logique.GameLogique;
 
-public class ThreadClient implements Runnable{
-
-	private Socket socket;
+public class ThreadClient extends Thread{
+	
+	// Numéro de client fourni par le serveur
+	private int numClient;
+	
+	// Objet GameLogique qui est conservé pour permettre a l'UI de comparé son instance local avec celle du serveur
+	private GameLogique gl = null;
+	// Adresse IP de connexion au serveur.
+	public final static String IP = "127.0.0.1";
+	
+	// Socket créer par l'interfaceGraphique de l'UI.
+	private Socket client;
+	
+	// ObjectInputStream qui permet de lire le contenu de la socket (envoyé par le serveur)
 	private ObjectInputStream in;
+	
+	// ObjectOutputStream qui permet d'écrire dans la socket (écrit côté client)
 	private ObjectOutputStream out;
-	private Client client;
-	private float delta;
-
-	public ThreadClient(Socket socket,Client client)
+	
+	// Timer pour savoir quand envoyé le gameLogique
+	private long startTimer;
+	
+	/**
+	 * Constructeur public du ThreadClient
+	 * Crée la socket pour faire des échanges avec le serveur
+	 * Déclare des attributs qui permettent d'écrire/lire dans la socket
+	 */
+	public ThreadClient()
 	{
-		this.socket = socket;
-		this.client = client;
+		this.startTimer = System.currentTimeMillis();
 		try {
-			this.out = new ObjectOutputStream(socket.getOutputStream());
-			this.in = new ObjectInputStream(socket.getInputStream());
+			this.client = new Socket(IP,Serveur.NUMPORT);
+			this.in = new ObjectInputStream(client.getInputStream());
+			this.out = new ObjectOutputStream(client.getOutputStream());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
-	public void run() {
-		while(true)
+	
+	/**
+	 * Methode qui permet de lire les données dans la socket envoyée par le serveur
+	 * @return un objet
+	 */
+	public Object readObject()
+	{
+		Object o = null;
+		if(in != null)
 		{
-			// Lecture de donnees venant du server
 			try {
-				if(in != null)
-				{
-					Object o = in.readObject();
-					if(o instanceof Integer)
-					{
-						client.setNumClient((int)o);
-					}
-					else if(o instanceof Float)
-					{
-						delta = (float)o;
-					}
-					else if(o instanceof Case[][])
-					{
-						client.setPlateau((Case[][])o);
-					}
-					else if(o instanceof String)
-					{
-						String s = (String)o;
-						String[] commandes = s.split(":");
-						if(commandes.length == 2)
-						{
-							int numClient = Integer.parseInt(commandes[0]);
-							String commande = commandes[1];
-							switch(commande)
-							{
-							case "UP":
-								if(client.getGame().canMove(client.getGame().getPlayers()[numClient], Game.UP, (int)delta))
-								{
-									System.out.println("Commade de déplacement recu   NumClient : " + numClient + " DIRECTION : UP");
-									client.getGame().getPlayers()[numClient].setY(client.getGame().getPlayers()[numClient].getY() - (delta * Game.COEFF_DEPLACEMENT));
-									client.getGame().getPlayers()[numClient].setDirection(Game.UP);
-									
-								}
-								break;
-							case "LEFT":
-								if(client.getGame().canMove(client.getGame().getPlayers()[numClient], Game.LEFT, (int)delta))
-								{
-									System.out.println("Commade de déplacement recu   NumClient : " + numClient + " DIRECTION : LEFT");
-									client.getGame().getPlayers()[numClient].setX(client.getGame().getPlayers()[numClient].getX() - (delta * Game.COEFF_DEPLACEMENT));
-									client.getGame().getPlayers()[numClient].setDirection(Game.LEFT);
-
-								}
-								break;
-							case "DOWN":
-								if(client.getGame().canMove(client.getGame().getPlayers()[numClient], Game.DOWN, (int)delta))
-								{
-									System.out.println("Commade de déplacement recu   NumClient : " + numClient + " DIRECTION : DOWN");
-									client.getGame().getPlayers()[numClient].setY(client.getGame().getPlayers()[numClient].getY() + (delta * Game.COEFF_DEPLACEMENT));
-									client.getGame().getPlayers()[numClient].setDirection(Game.DOWN);
-								}
-								break;
-							case "RIGHT":
-								if(client.getGame().canMove(client.getGame().getPlayers()[numClient], Game.RIGHT, (int)delta))
-								{
-									System.out.println("Commade de déplacement recu   NumClient : " + numClient + " DIRECTION : RIGHT");
-									client.getGame().getPlayers()[numClient].setX(client.getGame().getPlayers()[numClient].getX() + (delta * Game.COEFF_DEPLACEMENT));
-									client.getGame().getPlayers()[numClient].setDirection(Game.RIGHT);
-								}
-								break;
-							case "BOMB":
-								if(client.getGame().getPlayers()[numClient].getBombe().size() < Game.NB_BOMB_AVAILABLE)
-								{
-									new Thread(new Runnable(){
-										public void run()
-										{
-											Case c = client.getGame().getCaseFromCoord(client.getGame().getPlayers()[numClient].getX()+Game.getTailleCase()/2, client.getGame().getPlayers()[numClient].getY()+Game.getTailleCase() - (Game.getTailleCase()/2));
-											if(c.getType() != "WALL" && c.getType() != "INDESTRUCTIBLE" && !c.hasBombe())
-											{
-												client.getGame().getBoard()[c.getY()][c.getX()].setHasBombe(true);
-												Bomb b = new Bomb(client.getGame().getBombSheet(),c.getRealX()+Game.getTailleBomb()/2,c.getRealY()+Game.getTailleBomb()/2,new Explosion(c.getRealX()+Game.getTailleBomb()/2,c.getRealY()+Game.getTailleBomb()/2,client.getGame().getExplosionSheet()));
-												client.getGame().getPlayers()[numClient].getBombe().add(b);
-											}
-										}
-									}).start();
-								}
-							break;
-							case "BONUS":
-								break;
-							case "TRUE":
-								if(client.getGame().getPlayers()[numClient].isMoving() == false)
-								client.getGame().getPlayers()[numClient].setMoving(true);
-								break;
-							case "FALSE":
-								if(client.getGame().getPlayers()[numClient].isMoving())
-								client.getGame().getPlayers()[numClient].setMoving(false);
-								break;
-							case "NB_CLIENT":
-								client.setNumberClientConnected(numClient);
-								break;
-							}	
-						}
-						else if(commandes.length == 1)
-						{
-							switch(commandes[0])
-							{
-							case "GO":
-								client.setGame(new Game(true));
-								break;
-							}
-						}
-					}	
-				}
-				
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
+				 o = in.readObject();
+			} catch (ClassNotFoundException | IOException e) {
+				closeObjectInputStream();
 				e.printStackTrace();
 			}
-			catch(SocketException s)
-			{
-				this.in = null;
-				this.out = null;
-				this.client = null;
-				this.socket = null;
-				System.out.println("Exception de socket - Fermeture du flux");
-			}
-			catch (IOException e) {
-				// TODO Auto-generated catch block
-				System.out.println("Je Passe dans l'I/O Exception de la socket THREADCLIENT");
-				e.printStackTrace();
-			}
-
 		}
+		return o;
 	}
-
+	
+	/**
+	 * Permet d'écrire dans la socket l'objet passé en paramétre pour le serveur
+	 * @param o
+	 */
 	public void sendObject(Object o)
 	{
-		try
+		if(out != null)
 		{
-			out.writeObject(o);
-			out.flush();
-		}catch(IOException io)
-		{
-			io.printStackTrace();
+			try {
+				out.reset();
+				out.writeObject(o);
+			} catch (IOException e) {
+				closeObjectOutputStream();
+				e.printStackTrace();
+			}
 		}
-
+	}
+	
+	/**
+	 * Permet de fermer la socket en lecture
+	 */
+	public void closeObjectInputStream()
+	{
+		if(in != null)
+		{
+			try {
+				this.in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	/**
+	 * Permet de fermer la socket en écriture
+	 */
+	public void closeObjectOutputStream()
+	{
+		if(out != null)
+		{
+			try {
+				this.out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
-	public Socket getSocket()
+	/**
+	 * Méthode qui est une boucle infinie qui attends les données fournie par le serveur
+	 */
+	@Override
+	public void run() {
+		
+		Object o = readObject();
+		if(o instanceof Integer) // Lors du démarrage de la socket, le serveur envoie le numéro de client au client, 
+		{
+			this.numClient = Integer.parseInt(""+o); // le numéro est alors fourni par le serveur et je le bind ici
+		}
+		
+		while(true) // Boucle infinie
+		{
+			if(System.currentTimeMillis() - startTimer > Serveur.INTERVALLE_REFRESH)
+			{
+				o = readObject(); // J'attends les données du serveur
+				if(o instanceof GameLogique)
+				{
+					setGameLogique((GameLogique)o);	
+				}
+				startTimer = System.currentTimeMillis();
+			}
+		}		
+	}
+	
+	/**
+	 * Renvoie le numéro de client sur le serveur
+	 * @return entier
+	 */
+	public int getNumClient()
 	{
-		return this.socket;
+		return this.numClient;
+	}
+	
+	/**
+	 * Renvoie le temps écoulé depuis le démarrage de la socket
+	 * @return long
+	 */
+	public long getStartTimer()
+	{
+		return this.startTimer;
 	}
 
-	public void setSocket(Socket socket)
+	/**
+	 * Renvoie l'instance de gameLogique (généralement qui à la valeur de celle du serveur)
+	 * @return une instance de gamelogique
+	 */
+	public GameLogique getGameLogique()
 	{
-		this.socket = socket;
+		return this.gl;
 	}
-
-	public ObjectInputStream getIn()
+	
+	/**
+	 * Permet de modifier dynamiquement la logique de jeu
+	 * @param gl
+	 */
+	public void setGameLogique(GameLogique gl)
 	{
-		return this.in;
-	}
-
-	public void setIn(ObjectInputStream in)
-	{
-		this.in = in;
-	}
-
-	public ObjectOutputStream getOut()
-	{
-		return this.out;
-	}
-
-	public void setOut(ObjectOutputStream out)
-	{
-		this.out = out;
+		this.gl = gl;
 	}
 }
