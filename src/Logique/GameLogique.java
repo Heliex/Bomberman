@@ -19,6 +19,8 @@ public class GameLogique implements Serializable{
 	public static final int NB_CASE_LARGEUR = 20, NB_CASE_HAUTEUR = 20, NB_PLAYERS = 4;
 	public static int LEVEL = 1;
 	
+	public static final int offSetCollisionHorizontal = 18, offSetCollisionVertical = 32;
+	
 	public GameLogique()
 	{
 		this.plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
@@ -199,6 +201,7 @@ public class GameLogique implements Serializable{
 				{
 					canMove = true;
 				}
+			
 			break;
 			
 			case Player.LEFT:
@@ -209,14 +212,14 @@ public class GameLogique implements Serializable{
 				break;
 			
 			case Player.DOWN:
-				if(p.getY() +p.getCoeffDeplacement() < (GameLogique.NB_CASE_HAUTEUR - 1) * Case.TAILLE_CASE && getCaseFromCoord(p.getX(), p.getY() + p.getCoeffDeplacement()) != null && getCaseFromCoord(p.getX(), p.getY() + p.getCoeffDeplacement()).getType() != Case.WALL && getCaseFromCoord(p.getX(), p.getY() + p.getCoeffDeplacement()).getType() != Case.INDESTRUCTIBLE) // && la position voulue n'est pas un mur
+				if(p.getY() +p.getCoeffDeplacement() + offSetCollisionVertical < (GameLogique.NB_CASE_HAUTEUR - 1) * Case.TAILLE_CASE && getCaseFromCoord(p.getX(), p.getY() + p.getCoeffDeplacement() + offSetCollisionVertical) != null && getCaseFromCoord(p.getX(), p.getY() + p.getCoeffDeplacement() + offSetCollisionVertical).getType() != Case.WALL && getCaseFromCoord(p.getX(), p.getY() + p.getCoeffDeplacement() + offSetCollisionVertical).getType() != Case.INDESTRUCTIBLE) // && la position voulue n'est pas un mur
 				{	
 					canMove= true;
 				}
 				break;
 		
 			case Player.RIGHT:
-				if(p.getX() + p.getCoeffDeplacement() < (GameLogique.NB_CASE_LARGEUR - 1) * Case.TAILLE_CASE && getCaseFromCoord(p.getX() + p.getCoeffDeplacement(),p.getY()) != null && getCaseFromCoord(p.getX() + p.getCoeffDeplacement(), p.getY() ).getType() != Case.WALL && getCaseFromCoord(p.getX() + p.getCoeffDeplacement(), p.getY()).getType() != Case.INDESTRUCTIBLE) // && la position voulue n'est pas un mur
+				if((p.getX() + p.getCoeffDeplacement() - offSetCollisionHorizontal) < (GameLogique.NB_CASE_LARGEUR - 1) * Case.TAILLE_CASE && getCaseFromCoord(p.getX() + p.getCoeffDeplacement(),p.getY()) != null && getCaseFromCoord(p.getX() + p.getCoeffDeplacement(), p.getY() ).getType() != Case.WALL && getCaseFromCoord(p.getX() + p.getCoeffDeplacement(), p.getY()).getType() != Case.INDESTRUCTIBLE) // && la position voulue n'est pas un mur
 				{
 					canMove= true;
 				}
