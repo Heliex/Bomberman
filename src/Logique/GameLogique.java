@@ -229,7 +229,7 @@ public class GameLogique implements Serializable{
 			
 			case Player.DOWN:
 				// Gestion des collisions vers le bas
-				if(		middle.getY() + offSetCollisionVertical/2 +  (p.getCoeffDeplacement()*Player.VITESSE) < NB_CASE_HAUTEUR * Case.TAILLE_CASE &&
+				if(		middle.getY() + offSetCollisionVertical/2 +  (p.getCoeffDeplacement()*Player.VITESSE) < (NB_CASE_HAUTEUR * Case.TAILLE_CASE - 1) &&
 						getCaseFromCoord(middle.getX() - offSetCollisionHorizontal/2 ,middle.getY() + offSetCollisionVertical/2 + (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.WALL &&
 						getCaseFromCoord(middle.getX() - offSetCollisionHorizontal/2, middle.getY() + offSetCollisionVertical/2 + (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.INDESTRUCTIBLE &&
 						getCaseFromCoord(middle.getX(), middle.getY() + offSetCollisionVertical/2 + (p.getCoeffDeplacement()*Player.VITESSE)).getType() != Case.WALL &&
@@ -242,7 +242,7 @@ public class GameLogique implements Serializable{
 		
 			case Player.RIGHT:
 				// Gestion des collision vers la gauche
-				if( middle.getX() + offSetCollisionHorizontal/2 + p.getCoeffDeplacement() < NB_CASE_LARGEUR * Case.TAILLE_CASE  &&
+				if( middle.getX() + offSetCollisionHorizontal/2 + p.getCoeffDeplacement() < ( NB_CASE_LARGEUR * Case.TAILLE_CASE - 1)  &&
 					getCaseFromCoord(middle.getX() + offSetCollisionHorizontal/2 + (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() - offSetCollisionVertical/2 +1).getType() != Case.WALL &&
 					getCaseFromCoord(middle.getX() + offSetCollisionHorizontal/2 + (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() - offSetCollisionVertical/2 +1).getType() != Case.INDESTRUCTIBLE &&
 					getCaseFromCoord(middle.getX() + offSetCollisionHorizontal/2 + (p.getCoeffDeplacement()*Player.VITESSE) ,middle.getY() + offSetCollisionVertical/2 -1).getType() != Case.WALL &&

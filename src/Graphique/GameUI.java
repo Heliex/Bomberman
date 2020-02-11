@@ -12,6 +12,7 @@ import Commande.PoserBombe;
 import Commande.StopperDeplacementJoueur;
 import Logique.Bombe;
 import Logique.Case;
+import Logique.Explosion;
 import Logique.GameLogique;
 import Logique.Player;
 import Network.ThreadClient;
@@ -65,6 +66,7 @@ public class GameUI extends BasicGame{
 		}
 		
 		client.start();
+		gc.setTargetFrameRate(60);
 		gc.getInput().enableKeyRepeat();
 	}
 
@@ -109,8 +111,20 @@ public class GameUI extends BasicGame{
 						{
 							g.drawAnimation(bombeUI[i][j].getAnimation(), bombes[j].getX(), bombes[j].getY());
 						}
+						else // draw explosion
+						{
+							Explosion explosion = bombes[j].getExplosion();
+							if(explosion != null && !bombes[j].isDrawable())
+							{
+								g.drawAnimation(explosionUI[i][j].getMilieuExplosion(),bombes[j].getX(),bombes[j].getY());
+							}
+						}
+						
+						
 					}
 				}
+				
+				
 			}
 		}
 	}
@@ -170,7 +184,7 @@ public class GameUI extends BasicGame{
 	public static void main(String[] args)
 	{
 		try {
-			AppGameContainer app = new AppGameContainer(new GameUI("Test"));
+			AppGameContainer app = new AppGameContainer(new GameUI("Bomberman Multiplayer"));
 			app.setDisplayMode(GameLogique.NB_CASE_LARGEUR * Case.TAILLE_CASE, GameLogique.NB_CASE_HAUTEUR * Case.TAILLE_CASE, false);
 			app.setShowFPS(true);
 			app.setAlwaysRender(true);

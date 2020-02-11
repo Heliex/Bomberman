@@ -32,7 +32,7 @@ public class Serveur{
 	private static ThreadServeur[] threads = new ThreadServeur[NB_MAX_CONNECTED];
 	
 	// Intervalle de refresh du serveur (Combien de temps écoulé entre un nouvel envoi du serveur aux clients)
-	public final static int INTERVALLE_REFRESH = 15;
+	public final static int INTERVALLE_REFRESH = 10;
 	
 	// Timer de départ
 	private long startTimer;
@@ -50,6 +50,8 @@ public class Serveur{
 			this.startTimer = System.currentTimeMillis();
 			while(counterConnected < NB_MAX_CONNECTED) // Tant que j'ai pas tous les clients de co
 			{
+				System.out.println("LE SERVEUR EST DEMARRE...");
+				System.out.println("En attente de connexion d'un client...");
 				Socket s = ss.accept(); // J'attends un co
 				
 				ThreadServeur ts = new ThreadServeur(s,counterConnected); // Je crée un thread correspondent
@@ -74,7 +76,6 @@ public class Serveur{
 
 	public void go()
 	{
-		// TODO : Ajouter le broadCast de l'instance de GameLogique du serveur à tous les clients.
 		while(true)
 		{
 			if(System.currentTimeMillis() - startTimer > INTERVALLE_REFRESH) // Refresh Rate de 40 FPS
@@ -104,7 +105,6 @@ public class Serveur{
 					listeCommande.removeFirst();
 				}
 			}
-			
 			broadCast(gameLogique);
 		}
 	}
@@ -113,7 +113,6 @@ public class Serveur{
 	public static synchronized void clientTreatment(Object o)
 	{
 		listeCommande.add(o);
-		
 	}
 	
 	// Méthode Main qui permet de créer le serveur
