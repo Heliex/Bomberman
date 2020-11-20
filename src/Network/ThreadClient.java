@@ -33,6 +33,8 @@ public class ThreadClient extends Thread{
 	// Timer pour savoir quand envoyé le gameLogique
 	private long startTimer;
 	
+	private boolean exit;
+	
 	/**
 	 * Constructeur public du ThreadClient
 	 * Crée la socket pour faire des échanges avec le serveur
@@ -41,6 +43,7 @@ public class ThreadClient extends Thread{
 	public ThreadClient()
 	{
 		this.startTimer = System.currentTimeMillis();
+		this.exit = false;
 		try {
 			this.client = new Socket(IP,Serveur.NUMPORT);
 			this.in = new ObjectInputStream(client.getInputStream());
@@ -60,9 +63,15 @@ public class ThreadClient extends Thread{
 		if(in != null)
 		{
 			try {
-				 o = in.readObject();
+				
+				 o = in.readObject(); 
 			} catch (ClassNotFoundException | IOException e) {
-				closeObjectInputStream();
+				try {
+					client.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				e.printStackTrace();
 			}
 		}
@@ -81,7 +90,12 @@ public class ThreadClient extends Thread{
 				out.reset();
 				out.writeObject(o);
 			} catch (IOException e) {
-				closeObjectOutputStream();
+				try {
+					this.client.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				e.printStackTrace();
 			}
 		}
@@ -128,7 +142,7 @@ public class ThreadClient extends Thread{
 			this.numClient = Integer.parseInt(""+o); // le numéro est alors fourni par le serveur et je le bind ici
 		}
 		
-		while(true) // Boucle infinie
+		while(!this.exit) // Boucle infinie
 		{
 			if(System.currentTimeMillis() - startTimer > Serveur.INTERVALLE_REFRESH)
 			{
@@ -176,5 +190,15 @@ public class ThreadClient extends Thread{
 	public void setGameLogique(GameLogique gl)
 	{
 		this.gl = gl;
+	}
+	
+	public void setExit(boolean exit)
+	{
+		this.exit = exit;
+	}
+	
+	public Socket getSocket()
+	{
+		return this.client;
 	}
 }

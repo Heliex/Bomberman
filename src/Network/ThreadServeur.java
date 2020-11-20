@@ -22,6 +22,8 @@ public class ThreadServeur extends Thread {
 	// Numéro de client (fourni par le serveur)
 	private int numClient;
 	
+	private boolean exit;
+	
 	/**
 	 * Constructeur qui prend en paramètre la socket qu'envoie le serveur et le numéro de client
 	 * @param s
@@ -31,6 +33,7 @@ public class ThreadServeur extends Thread {
 	{
 		this.socket = s;
 		this.numClient = numClient;
+		this.exit = false;
 		try {
 			this.out = new ObjectOutputStream(socket.getOutputStream());
 			this.in = new ObjectInputStream(socket.getInputStream());
@@ -43,10 +46,13 @@ public class ThreadServeur extends Thread {
 	public void run() {
 		
 		sendObject(numClient); // Lorsque la connexion est établie, la socket envoie une information au client instantanément
-		while(true)
+		while(!this.exit)
 		{
-			Object o = readObject(); // Je lis ce que le client m'envoie tout les 25 ms;
-			Serveur.clientTreatment(o);
+			if(!socket.isClosed())
+			{
+				Object o = readObject(); // Je lis ce que le client m'envoie tout les 25 ms;
+				Serveur.clientTreatment(o);
+			}
 		}
 	}
 	
@@ -60,9 +66,9 @@ public class ThreadServeur extends Thread {
 		if(in != null)
 		{
 			try {
+
 				o = this.in.readObject();
 			} catch (ClassNotFoundException | IOException e) {
-				closeObjectInputStream();
 				try {
 					socket.close();
 				} catch (IOException e1) {
@@ -88,11 +94,10 @@ public class ThreadServeur extends Thread {
 				this.out.writeObject(o);
 			} catch (IOException e) {
 				System.out.println("je rentre dans l'IOException ?");
-				closeObjectOutputStream();
 				try {
-					socket.close();
+					this.socket.close();
 				} catch (IOException e1) {
-					// TODO Bloc catch généré automatiquement
+					System.out.println("On cloture la socket ?");
 					e1.printStackTrace();
 				}
 				e.printStackTrace();
@@ -130,6 +135,21 @@ public class ThreadServeur extends Thread {
 				io.printStackTrace();
 			}
 		}
+	}
+	
+	public ThreadServeur getThreadServeur()
+	{
+		return this;
+	}
+	
+	public Socket getSocket()
+	{
+		return this.socket;
+	}
+	
+	public void setExit(boolean exit)
+	{
+		this.exit = exit;
 	}
 	
 

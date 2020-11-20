@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.util.LinkedList;
 
 import Commande.DeplacerJoueur;
+import Commande.EffacerBombe;
 import Commande.PoserBombe;
 import Commande.StopperDeplacementJoueur;
 import Logique.GameLogique;
@@ -41,6 +42,8 @@ public class Serveur{
 	
 	private static GameLogique gameLogique = new GameLogique();
 	
+	private boolean isOK;
+	
 	
 	// Constructeur par défaut du serveur
 	public Serveur()
@@ -48,16 +51,17 @@ public class Serveur{
 		try { 
 			this.ss = new ServerSocket(NUMPORT); // Création du serverSocket sur le port en variable
 			this.startTimer = System.currentTimeMillis();
+			this.isOK = true;
 			while(counterConnected < NB_MAX_CONNECTED) // Tant que j'ai pas tous les clients de co
 			{
 				System.out.println("LE SERVEUR EST DEMARRE...");
 				System.out.println("En attente de connexion d'un client...");
 				Socket s = ss.accept(); // J'attends un co
-				
 				ThreadServeur ts = new ThreadServeur(s,counterConnected); // Je crée un thread correspondent
 				threads[counterConnected] = ts; // J'ajoute le thread dans mon tableau (pour le broadCast)
 				ts.start(); // Démarrage du thread
 				counterConnected++; // Compteur incrémenté
+				System.out.println("Joueur : " + counterConnected + "/" + NB_MAX_CONNECTED );
 			}
 			go(); /* Lorsque tous les clients sont connectés, je rentre dans une boucle qui
 			 		 va envoyé l'état du serveur aux clients toutes les 25 ms
@@ -76,7 +80,7 @@ public class Serveur{
 
 	public void go()
 	{
-		while(true)
+		while(this.isOK)
 		{
 			if(System.currentTimeMillis() - startTimer > INTERVALLE_REFRESH) // Refresh Rate de 40 FPS
 			{
@@ -102,9 +106,15 @@ public class Serveur{
 						PoserBombe pb = (PoserBombe)o;
 						gameLogique.poserBombe(pb.getNum());
 					}
+					else if(o instanceof EffacerBombe)
+					{
+						EffacerBombe eb = (EffacerBombe)o;
+						gameLogique.effacerBombe(eb.getNum());
+					}
 					listeCommande.removeFirst();
 				}
 			}
+			// Envoie de l'état du jeu à tous les clients après avoir consommé toute la liste de commande à faire
 			broadCast(gameLogique);
 		}
 	}
@@ -128,7 +138,21 @@ public class Serveur{
 		{
 			if(threads[i] != null)
 			{
-				threads[i].sendObject(o);
+
+				if(threads[i].getThreadServeur().getSocket() != null && threads[i].getThreadServeur().getSocket().isConnected() && !threads[i].getThreadServeur().getSocket().isClosed())
+				{
+					threads[i].sendObject(o);
+				}
+				else
+				{
+					this.isOK = false;
+					System.out.println("Une des connexions au client a été perdue, le jeu va s'arrêter");
+					for(int j=0; j < NB_MAX_CONNECTED;j++)
+					{
+						threads[j].getThreadServeur().setExit(true);
+						threads[j] = null;
+					}
+				}
 			}
 		}
 	}

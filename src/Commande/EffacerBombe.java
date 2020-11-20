@@ -2,7 +2,7 @@ package Commande;
 
 import java.io.Serializable;
 
-public class PoserBombe implements Serializable{
+public class EffacerBombe implements Serializable{
 	
 	/**
 	 * 
@@ -10,7 +10,7 @@ public class PoserBombe implements Serializable{
 	private static final long serialVersionUID = 378291580271272671L;
 	private int numClient;
 	
-	public PoserBombe(int num)
+	public EffacerBombe(int num)
 	{
 		this.numClient = num;
 	}

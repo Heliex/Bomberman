@@ -2,20 +2,21 @@ package Logique;
 
 
 
-public class Bombe extends LogiqueComponent implements Runnable{
+public class Bombe extends LogiqueComponent{
 	
 	private static final long serialVersionUID = -3677888271498285808L;
+	private static int indiceBombe = 0;
 	public final static int TIME_TO_EXPLODE = 4000, TAILLE_BOMBE = 16 , TIME_BETWEEN_BOMB_MOVEMENT = 250;
-	private Explosion explosion;
-	private Player player;
-	private int indiceBombe;
+	private int indiceJoueur;
+	private int indiceInterne;
+	private long timerStart;
 	
-	public Bombe(float f, float g, boolean isDrawable, Player player, int indiceBombe)
+	public Bombe(float f, float g, boolean isDrawable,int indiceJoueur)
 	{
 		super(f,g,isDrawable);
-		this.indiceBombe = indiceBombe;
-		this.player = player;
-		this.explosion = new Explosion(this.getX(),this.getY(),false);
+		this.indiceJoueur = indiceJoueur;
+		this.indiceInterne = indiceBombe;
+		this.timerStart = System.currentTimeMillis();
 	}
 	
 	public String toString()
@@ -23,37 +24,44 @@ public class Bombe extends LogiqueComponent implements Runnable{
 		return "XBomb : " + this.getX() + " YBomb : " + this.getY() ;
 	}
 	
-	public Explosion getExplosion()
+	
+	public int getIndiceJoueur()
 	{
-		return this.explosion;
+		return this.indiceJoueur;
 	}
 	
-	public Player getPlayer()
+	public void setIndiceJoueur(int indice)
 	{
-		return this.player;
+		this.indiceJoueur = indice;
 	}
 	
-	public int getIndiceBombe()
+	public static void augmenterIndice()
 	{
-		return this.indiceBombe;
+		indiceBombe++;
 	}
 	
-	@Override
-	synchronized public void  run() {
-		
-		long timerStart = System.currentTimeMillis();
-		while(true)
-		{
-			if(System.currentTimeMillis() - timerStart > TIME_TO_EXPLODE)
-			{
-				this.setDrawable(false);
-				player.setNbBombeAvailable(player.getNBombeAvailable() + 1);
-				player.setNbBombeOnBoard(player.getNbBombeOnBoard() - 1);
-				player.getListeBombes()[indiceBombe] = null;
-				break;
-				
-			}
-		}
-		
+	public static void diminuerIndice()
+	{
+		indiceBombe--;
+	}
+	
+	public static int getIndice()
+	{
+		return indiceBombe;
+	}
+	
+	public int getIndiceInterne()
+	{
+		return this.indiceInterne;
+	}
+	
+	public void setIndiceInterne(int indice)
+	{
+		this.indiceInterne = indice;
+	}
+	
+	public long getTimerStart()
+	{
+		return this.timerStart;
 	}
 }

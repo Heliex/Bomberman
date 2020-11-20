@@ -5,13 +5,6 @@ package Logique;
 
 public class Player extends LogiqueComponent {
 	
-	// variable privées
-	private static final long serialVersionUID = 357065401577665717L;
-	private int numJoueur;
-	private boolean isMoving;
-	private int direction;
-	private float coeffDeplacement;
-	private Bombe[] bombes = new Bombe[NB_BOMBE_MAX];
 	
 	// COnstantes
 	public final static int UP = 0, LEFT = 1 , DOWN = 2 , RIGHT = 3 ;
@@ -20,6 +13,14 @@ public class Player extends LogiqueComponent {
 	public final static int VITESSE = 2;
 	public final static float COEFF_MIN = 1.5f;
 	public static int TAILLE_EXPLOSION = 2;
+	
+	// variable privées
+	private static final long serialVersionUID = 357065401577665717L;
+	private int numJoueur;
+	private boolean isMoving;
+	private int direction;
+	private float coeffDeplacement;
+	private Bombe[] bombes = new Bombe[NB_BOMBE_MAX];
 	
 	// Variables
 	private int nbBombeAvailable ,nbBombeOnBoard, lifeAvailable, nbBombesPosable;

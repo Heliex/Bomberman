@@ -8,11 +8,11 @@ import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 
 import Commande.DeplacerJoueur;
+import Commande.EffacerBombe;
 import Commande.PoserBombe;
 import Commande.StopperDeplacementJoueur;
 import Logique.Bombe;
 import Logique.Case;
-import Logique.Explosion;
 import Logique.GameLogique;
 import Logique.Player;
 import Network.ThreadClient;
@@ -105,26 +105,22 @@ public class GameUI extends BasicGame{
 				Bombe[] bombes = client.getGameLogique().getPlayers()[i].getListeBombes();
 				for(int j = 0 ; j < bombes.length ; j++)
 				{
-					if(bombes[j] != null)
+					if(bombes[j] != null) // Traitement des bombes
 					{	
-						if(bombes[j].isDrawable())
+						if(bombes[j].isDrawable() && (System.currentTimeMillis() - bombes[j].getTimerStart() < Bombe.TIME_TO_EXPLODE))
 						{
 							g.drawAnimation(bombeUI[i][j].getAnimation(), bombes[j].getX(), bombes[j].getY());
 						}
-						else // draw explosion
+						else
 						{
-							Explosion explosion = bombes[j].getExplosion();
-							if(explosion != null && !bombes[j].isDrawable())
+							if(bombes[j].isDrawable())
 							{
-								g.drawAnimation(explosionUI[i][j].getMilieuExplosion(),bombes[j].getX(),bombes[j].getY());
-							}
+								client.sendObject(new EffacerBombe(client.getNumClient()));
+								bombes[j].setDrawable(false);
+							}		
 						}
-						
-						
 					}
 				}
-				
-				
 			}
 		}
 	}
@@ -137,6 +133,8 @@ public class GameUI extends BasicGame{
 	@Override
 	public void keyPressed(int key, char c)
 	{
+		if(client.getSocket() != null &&  client.getSocket().isConnected())
+		{
 			switch(key)
 			{
 				case Input.KEY_UP:
@@ -163,13 +161,28 @@ public class GameUI extends BasicGame{
 					client.sendObject(new PoserBombe(client.getNumClient()));
 					break;
 			}
-			
+		}
 	}
 	
 	@Override
 	public void keyReleased(int key, char c)
 	{
-		client.sendObject(new StopperDeplacementJoueur(client.getNumClient()));
+		if(client.getSocket() != null &&  client.getSocket().isConnected())
+		{
+			switch(key)
+			{
+				case Input.KEY_UP:
+				case Input.KEY_Z:
+				case Input.KEY_LEFT:
+				case Input.KEY_Q:
+				case Input.KEY_DOWN:
+				case Input.KEY_S:
+				case Input.KEY_RIGHT:
+				case Input.KEY_D:
+					client.sendObject(new StopperDeplacementJoueur(client.getNumClient()));
+				break;
+			}	
+		}	
 	}
 	
 	public GameLogique getGameLogique()
@@ -189,7 +202,7 @@ public class GameUI extends BasicGame{
 			app.setShowFPS(true);
 			app.setAlwaysRender(true);
 			app.start();
-		} catch (SlickException e) {
+		} catch (Exception e) {
 			// TODO Bloc catch généré automatiquement
 			e.printStackTrace();
 		}
