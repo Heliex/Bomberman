@@ -8,11 +8,11 @@ import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 
 import Commande.DeplacerJoueur;
-import Commande.EffacerBombe;
 import Commande.PoserBombe;
 import Commande.StopperDeplacementJoueur;
 import Logique.Bombe;
 import Logique.Case;
+import Logique.Explosion;
 import Logique.GameLogique;
 import Logique.Player;
 import Network.ThreadClient;
@@ -107,21 +107,48 @@ public class GameUI extends BasicGame{
 				{
 					if(bombes[j] != null) // Traitement des bombes
 					{	
-						if(bombes[j].isDrawable() && (System.currentTimeMillis() - bombes[j].getTimerStart() < Bombe.TIME_TO_EXPLODE))
+						if(bombes[j].isDrawable())
 						{
 							g.drawAnimation(bombeUI[i][j].getAnimation(), bombes[j].getX(), bombes[j].getY());
-						}
-						else
-						{
-							if(bombes[j].isDrawable())
-							{
-								client.sendObject(new EffacerBombe(client.getNumClient()));
-								bombes[j].setDrawable(false);
-							}		
 						}
 					}
 				}
 			}
+			
+			// DrawExplosion
+			Explosion[][] explosions = client.getGameLogique().getExplosions();
+			for(int i = 0; i < GameLogique.NB_PLAYERS; i++)
+			{
+				for(int j = 0; j < Player.NB_BOMBE_MAX; j++)
+				{
+					if(explosions[i][j] != null)
+					{
+						if(explosions[i][j].isDrawable())
+						{
+							// Affichage du milieu de l'explosion dans tous les cas
+							g.drawAnimation(explosionUI[i][j].getMilieuExplosion(), explosions[i][j].getX(), explosions[i][j].getY());
+							
+							// Affichage du haut de l'explosion
+							g.drawAnimation(explosionUI[i][j].getMilieuVerticalExplosion(), explosions[i][j].getX(), explosions[i][j].getY() - (Case.TAILLE_CASE / 2));
+							g.drawAnimation(explosionUI[i][j].getExtremiteHauteExplosion(), explosions[i][j].getX(), explosions[i][j].getY() - Case.TAILLE_CASE );
+							
+							// Affichage du bas de l'explosion
+							g.drawAnimation(explosionUI[i][j].getMilieuVerticalExplosion(), explosions[i][j].getX(), explosions[i][j].getY() + (Case.TAILLE_CASE / 2));
+							g.drawAnimation(explosionUI[i][j].getExtremiteBasseExplosion(), explosions[i][j].getX(), explosions[i][j].getY() + Case.TAILLE_CASE );
+						
+							// Affichage de la droite de l'explosion
+							g.drawAnimation(explosionUI[i][j].getMilieuHorizontalExplosion(), explosions[i][j].getX() + (Case.TAILLE_CASE/2), explosions[i][j].getY());
+							g.drawAnimation(explosionUI[i][j].getExtremiteDroiteExplosion(), explosions[i][j].getX() + (Case.TAILLE_CASE), explosions[i][j].getY());
+						
+							// Affichage de la gauche de l'explosion
+							g.drawAnimation(explosionUI[i][j].getMilieuHorizontalExplosion(), explosions[i][j].getX() - (Case.TAILLE_CASE/2), explosions[i][j].getY());
+							g.drawAnimation(explosionUI[i][j].getExtremiteGaucheExplosion(), explosions[i][j].getX() - (Case.TAILLE_CASE), explosions[i][j].getY());
+						}
+					}
+				}
+			}
+			
+			
 		}
 	}
 

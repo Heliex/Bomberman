@@ -10,10 +10,12 @@ import java.net.Socket;
 import java.util.LinkedList;
 
 import Commande.DeplacerJoueur;
-import Commande.EffacerBombe;
 import Commande.PoserBombe;
 import Commande.StopperDeplacementJoueur;
+import Logique.Bombe;
+import Logique.Explosion;
 import Logique.GameLogique;
+import Logique.Player;
 
 public class Serveur{
 	
@@ -106,12 +108,34 @@ public class Serveur{
 						PoserBombe pb = (PoserBombe)o;
 						gameLogique.poserBombe(pb.getNum());
 					}
-					else if(o instanceof EffacerBombe)
-					{
-						EffacerBombe eb = (EffacerBombe)o;
-						gameLogique.effacerBombe(eb.getNum());
-					}
 					listeCommande.removeFirst();
+				}
+			}
+			
+			// Gestion des mis à jour d'état des bombes
+			for(int i =0; i < GameLogique.NB_PLAYERS; i++)
+			{
+				Player p = gameLogique.getPlayers()[i];
+				for(int j = 0; j < p.getListeBombes().length; j++)
+				{
+					if(p.getListeBombes()[j] != null && p.getListeBombes()[j].isBlocked()
+							&& System.currentTimeMillis() - p.getListeBombes()[j].getTimerStart() > Bombe.TIME_TO_EXPLODE)
+					{
+						gameLogique.creerExplosion(i,j,p.getListeBombes()[j].getX(),p.getListeBombes()[j].getY());
+						gameLogique.effacerBombe(i,j);
+					}
+				}
+			}
+			
+			// Gestion des explosions
+			for(int i = 0; i < GameLogique.NB_PLAYERS; i++)
+			{
+				for(int j = 0; j < Player.NB_BOMBE_MAX; j++)
+				{
+					if(gameLogique.getExplosions()[i][j] != null && System.currentTimeMillis() - gameLogique.getExplosions()[i][j].getTimerStart() > Explosion.TIME_TO_DRAW)
+					{
+						gameLogique.effacerExplosion(i,j);
+					}
 				}
 			}
 			// Envoie de l'état du jeu à tous les clients après avoir consommé toute la liste de commande à faire

@@ -7,13 +7,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
 
-
 public class GameLogique implements Serializable{
 
 
 	private static final long serialVersionUID = -6138274667424057646L;
 	private Case[][] plateau;
 	private Player[] players ;
+	private Explosion[][] explosions;
 	private long timerAtStart ;
 	
 	public static final int NB_CASE_LARGEUR = 20, NB_CASE_HAUTEUR = 20, NB_PLAYERS = 4;
@@ -25,6 +25,7 @@ public class GameLogique implements Serializable{
 	{
 		this.plateau = new Case[NB_CASE_HAUTEUR][NB_CASE_LARGEUR];
 		this.players = new Player[NB_PLAYERS];
+		this.explosions = new Explosion[GameLogique.NB_PLAYERS][Player.NB_BOMBE_MAX];
 		// Lecture de fichier pour alimenter les cases.
 		timerAtStart = System.currentTimeMillis();
 		initLevel("niveaux/niveau" + LEVEL + ".txt");
@@ -265,22 +266,43 @@ public class GameLogique implements Serializable{
 	{
 		if(players[indiceJoueur].getNBombeAvailable() > 0 && players[indiceJoueur].getNbBombeOnBoard() < players[indiceJoueur].getNbBombePosable()) // Si le joueur dispose d'une bombe et qu'il ne dépasse pas son quota de bombe posable en simultanée
 		{
-			Bombe b = new Bombe(players[indiceJoueur].getX(),players[indiceJoueur].getY(),true,indiceJoueur);
-			players[indiceJoueur].getListeBombes()[Bombe.getIndice()] = b;
-			players[indiceJoueur].setNbBombeOnBoard(players[indiceJoueur].getNbBombeOnBoard() + 1);
-			players[indiceJoueur].setNbBombeAvailable(players[indiceJoueur].getNBombeAvailable() - 1);
-			Bombe.augmenterIndice();
+			if(players[indiceJoueur].getListeBombes()[players[indiceJoueur].getNbBombeOnBoard()] == null || !players[indiceJoueur].getListeBombes()[players[indiceJoueur].getNbBombeOnBoard()].isBlocked())
+			{
+				Bombe b = new Bombe(players[indiceJoueur].getX(),players[indiceJoueur].getY(),true,indiceJoueur);
+				players[indiceJoueur].getListeBombes()[players[indiceJoueur].getNbBombeOnBoard()] = b;
+				players[indiceJoueur].setNbBombeOnBoard(players[indiceJoueur].getNbBombeOnBoard() + 1);
+				players[indiceJoueur].setNbBombeAvailable(players[indiceJoueur].getNBombeAvailable() - 1);
+				
+			}
 		}
 	}
 	
-	public void effacerBombe(final int indiceJoueur)
+	public void effacerBombe(final int indiceJoueur,int indiceBombe)
 	{
-		players[indiceJoueur].getListeBombes()[Bombe.getIndice()] = null;
-		players[indiceJoueur].setNbBombeOnBoard(players[indiceJoueur].getNbBombeOnBoard() - 1);
-		players[indiceJoueur].setNbBombeAvailable(players[indiceJoueur].getNBombeAvailable() + 1);
-		if(Bombe.getIndice() > 0)
+
+		if(players[indiceJoueur].getListeBombes()[indiceBombe] != null && players[indiceJoueur].getListeBombes()[indiceBombe].isBlocked())
 		{
-			Bombe.diminuerIndice();
+			players[indiceJoueur].getListeBombes()[indiceBombe] = null ;
+			players[indiceJoueur].setNbBombeAvailable(players[indiceJoueur].getNBombeAvailable() + 1);
+			players[indiceJoueur].setNbBombeOnBoard(players[indiceJoueur].getNbBombeOnBoard() - 1);
+				
+		}
+	}
+	
+	public void creerExplosion(final int indiceJoueur,int indiceBombe,float x, float y)
+	{
+		Explosion e = new Explosion(x,y,true,indiceJoueur);
+		if(this.explosions[indiceJoueur][indiceBombe] == null)
+		{
+			this.explosions[indiceJoueur][indiceBombe] = e;
+		}	
+	}
+	
+	public void effacerExplosion(final int indiceJoueur,int indiceExplosion)
+	{
+		if(this.explosions[indiceJoueur][indiceExplosion] != null)
+		{
+			this.explosions[indiceJoueur][indiceExplosion] = null;
 		}
 	}
 	
@@ -358,5 +380,14 @@ public class GameLogique implements Serializable{
 		return equals;
 	}
 	
+	public Explosion[][] getExplosions()
+	{
+		return this.explosions;
+	}
+	
+	public void setExplosions(Explosion[][] explosion)
+	{
+		this.explosions = explosion;
+	}
 
 }
